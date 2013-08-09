@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="253dp"
+        android:layout_gravity="top" >
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:src="@drawable/church_bg" />
+        
+        <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="22dp"
+            android:background="@color/church_title_box_color"
+            android:orientation="vertical"
+            android:padding="10dp" >
+
+            <TextView
+                android:id="@+id/church_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/church_name"
+                android:textColor="@color/church_title_color"
+                android:textSize="@dimen/menu_font_size" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    android:id="@+id/church_address"
+                    android:layout_width="142dp"
+                    android:layout_height="match_parent"
+                    android:text="@string/church_address"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/church_address_color" />
+
+                <ImageButton
+                    android:id="@+id/map_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/map"
+                    android:contentDescription="@string/link_to_open_in_map" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/linearLayout1"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:background="@color/church_worship_box_color"
+            android:orientation="vertical"
+            android:padding="10dp" >
+
+            <TextView
+                android:id="@+id/worship_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/next_worship"
+                android:textColor="@color/church_worship_label_color" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    android:id="@+id/worship_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/worship_time"
+                    android:textColor="@color/church_worship_time_color"
+                    android:textSize="40sp" />
+
+                <android.support.v7.widget.Space
+                    android:id="@+id/space1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/worship_attend"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="33dp"
+                    android:background="@color/church_worship_attend_box_color"
+                    android:padding="3dp"
+                    android:text="@string/attend"
+                    android:textColor="@color/church_worship_attend_color"
+                    android:width="30dip" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/worship_speaker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/worship_speaker"
+                android:textColor="@color/church_worship_speaker_color" />
+        </LinearLayout>
+
+    </RelativeLayout>
+	    <com.handmark.pulltorefresh.library.PullToRefreshListView
+        android:id="@+id/pull_refresh_list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:cacheColorHint="#00000000"
+        android:divider="#19000000"
+        android:dividerHeight="4dp"
+        android:fadingEdge="none"
+        android:fastScrollEnabled="false"
+        android:footerDividersEnabled="false"
+        android:headerDividersEnabled="false"
+        android:smoothScrollbar="true" />
+    </LinearLayout>

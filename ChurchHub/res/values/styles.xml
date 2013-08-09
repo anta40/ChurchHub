@@ -1,0 +1,31 @@
+<resources>
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    -->
+    <style name="AppBaseTheme" parent="android:Theme.Light">
+        <!--
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+        -->
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    </style>
+    <color name="nearest_opt_color">#9DEE61</color>
+    <color name="recent_opt_color">#FFB335</color><color name="stats_opt_color">#BB2E63</color><color name="browse_opt_color">#D4E497</color>
+    <color name="church_title_box_color">#004455</color>
+    <color name="church_title_color">#6A94C0</color>
+    <color name="church_address_color">#79736B</color>
+    <color name="church_worship_box_color">#165044</color>
+    <color name="church_worship_time_color">#E5FF80</color>
+    <color name="church_worship_label_color">#9EA571</color>
+    <color name="church_worship_speaker_color">#5F826F</color>
+    <color name="church_worship_attend_box_color">#8DD35F</color>
+    <color name="church_worship_attend_color">#44AA00</color>
+
+</resources>
