@@ -1,0 +1,4 @@
+# Android environment
+*.log
+*/bin/*
+*/gen/*
