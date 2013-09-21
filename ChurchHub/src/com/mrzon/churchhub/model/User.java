@@ -1,12 +1,18 @@
 package com.mrzon.churchhub.model;
 
+import java.io.Serializable;
+
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseRelation;
 import com.parse.ParseUser;
 
-public class User {
+public class User implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2236515851942087185L;
 	private double lon;
 	public double getLon() {
 		return lon;
@@ -57,6 +63,13 @@ public class User {
 	private String fName;
 	private String lName;
 	private String bod;
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	private String id;
 	public void setUserName(String username) {
 		this.username = username;
 	}
@@ -66,26 +79,27 @@ public class User {
 	}
 	
 	public void addSavedChurch(Church ch) {
-		ParseRelation<ParseObject> q = ParseUser.getCurrentUser().getRelation("savedchurch");
+		ParseRelation<ParseObject> q = ParseUser.getCurrentUser().getRelation("savedChurch");
 		q.add(ch.getPObject());
 	}
 	
 	public void removeSavedChurch(Church ch) {
-		ParseRelation<ParseObject> q = ParseUser.getCurrentUser().getRelation("savedchurch");
+		ParseRelation<ParseObject> q = ParseUser.getCurrentUser().getRelation("savedChurch");
 		q.remove(ch.getPObject());
 	}
 	
 	public boolean savedChurchExist(Church ch) {
-		ParseRelation<ParseObject> pr = ParseUser.getCurrentUser().getRelation("savedchurch");
+		ParseRelation<ParseObject> pr = ParseUser.getCurrentUser().getRelation("savedChurch");
 		ParseQuery<ParseObject> pq = pr.getQuery();
-		pq.whereEqualTo("church", ch.getPObject());
-		int i=0;
+		
 		try {
-			i = pq.count();
+			ParseObject po = pq.get(ch.getId());
+			if(po == null) {
+				return false;
+			}
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return false;
 		}
-		return i!=0;
+		return true;
 	}
 }

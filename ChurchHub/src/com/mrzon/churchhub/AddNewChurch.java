@@ -1,9 +1,11 @@
 package com.mrzon.churchhub;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,8 +20,16 @@ import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
 import com.mrzon.churchhub.model.Denomination;
 import com.mrzon.churchhub.model.Helper;
+
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -33,19 +43,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class AddNewChurch extends RoboActivity {
-
+public class AddNewChurch extends RoboActivity implements LocationListener {
+	private ProgressDialog pd;
 	public static Map<String, String> getQueryMap(String query)  
 	{  
-	    String[] params = query.split("&");  
-	    Map<String, String> map = new HashMap<String, String>();  
-	    for (String param : params)  
-	    {  
-	        String name = param.split("=")[0];  
-	        String value = param.split("=")[1];  
-	        map.put(name, value);  
-	    }  
-	    return map;  
+		String[] params = query.split("&");  
+		Map<String, String> map = new HashMap<String, String>();  
+		for (String param : params)  
+		{  
+			String name = param.split("=")[0];  
+			String value = param.split("=")[1];  
+			map.put(name, value);  
+		}  
+		return map;  
 	}
 	public static Double[] getLatLong(Map<String,String> map) throws Exception{
 		Double []latlong = new Double[2];
@@ -57,10 +67,10 @@ public class AddNewChurch extends RoboActivity {
 		}
 		latlong[0] = Double.parseDouble(ll.split(",")[0]);
 		latlong[1] = Double.parseDouble(ll.split(",")[1]);
-	
+
 		return latlong;
 	}
-	
+
 	private class ATask extends AsyncTask<String, Integer, Double[]>
 	{
 
@@ -68,28 +78,39 @@ public class AddNewChurch extends RoboActivity {
 		{
 		}
 
-		@Override
+		@Override	
 		protected Double[] doInBackground(String... params) 
 		{
 			URLConnection urlConn =  connectURL(params[0]);
 			urlConn.getHeaderFields();	
 			System.out.println("Original URL: "+ urlConn.getURL());
 			String url = urlConn.getURL().toExternalForm();
+			try {
+				String decode = URLDecoder.decode(url,"UTF-8");
+				url = decode;
+			} catch (UnsupportedEncodingException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			Map<String,String> urlQuery = getQueryMap(url);
 			Double[] locs = null;
-			try{
+			try {
 				locs = getLatLong(urlQuery);
 			} catch (Exception e) {
-				Toast.makeText(getBaseContext(), "No coordinate found", Toast.LENGTH_LONG).show();
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+
 			return locs;
 		}   
 
 		@Override
 		protected void onPostExecute(Double[] result) 
 		{
-			lat = result[0];
-			lon = result[1]; 
+			if(result != null) {
+				lat = result[0];
+				lon = result[1]; 
+			}
 			if(lat == 0 && lon == 0) {
 				Toast.makeText(getBaseContext(), "No coordinate found", Toast.LENGTH_LONG).show();
 			} else {
@@ -102,6 +123,8 @@ public class AddNewChurch extends RoboActivity {
 	private List<Denomination> denominations = null;
 	private String address;
 	private double lat,lon;
+	private LocationManager locationManager;
+	private String provider;
 	URLConnection connectURL(String strURL) {
 		URLConnection conn =null;
 		try {
@@ -120,6 +143,7 @@ public class AddNewChurch extends RoboActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_add_new_church);
+
 		pullToRefreshView.setOnRefreshListener(new OnRefreshListener<ListView>() {
 			@Override
 			public void onRefresh(PullToRefreshBase<ListView> refreshView) {
@@ -130,17 +154,44 @@ public class AddNewChurch extends RoboActivity {
 		setAction();
 		setContent();
 		Intent intent = getIntent();
+		boolean needlocation = false;
 		if(intent!=null) {
-			Bundle extras = intent.getExtras();
-			String address = (String) extras.get(Intent.EXTRA_SUBJECT);
-			String dAddress = (String) extras.get(Intent.EXTRA_TEXT);
-			String shortURL = dAddress.split("http")[1];
-			shortURL = "http"+shortURL;
-			System.out.println("Short URL: "+ shortURL);
-			final String url =shortURL;
-			ATask task = new ATask();
-			task.execute(url);
-			this.address = address;
+			Bundle extras = intent.getExtras(); try {
+				String address = (String) extras.get(Intent.EXTRA_SUBJECT);
+				String dAddress = (String) extras.get(Intent.EXTRA_TEXT);
+				String shortURL = dAddress.split("http")[1];
+				shortURL = "http"+shortURL;
+				System.out.println("Short URL: "+ shortURL);
+				final String url =shortURL;
+				ATask task = new ATask();
+				task.execute(url);
+				this.address = address;			
+			} catch (Exception e) {
+				needlocation = true;
+			}
+		} else {
+			needlocation = true;
+		}
+		if(needlocation) {
+			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+			// Define the criteria how to select the locatioin provider -> use
+			// default
+			Criteria criteria = new Criteria();
+			provider = locationManager.getBestProvider(criteria, false);
+			Location location = locationManager.getLastKnownLocation(provider);
+			boolean enabled = locationManager
+					.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+			// Check if enabled and if not send user to the GSP settings
+			// Better solution would be to display a dialog and suggesting to 
+			// go to the settings
+			if (!enabled) {
+				Intent ii = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+				startActivity(ii);
+			} else {
+				pd = ProgressDialog.show(this, "Working..", "Fetching location", true,
+						false);
+			}
 		}
 
 	}
@@ -208,6 +259,7 @@ public class AddNewChurch extends RoboActivity {
 				CHDialog.AddChurchDialogFragment addDialog = new CHDialog.AddChurchDialogFragment();
 				addDialog.setDenomination(d);
 				addDialog.setAddress(address);
+
 				addDialog.setLatitude(lat);
 				addDialog.setLongitude(lon);
 				addDialog.show(getFragmentManager(), "ADD ACTIVITY DIALOG");
@@ -256,5 +308,50 @@ public class AddNewChurch extends RoboActivity {
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	/* Request updates at startup */
+	@Override
+	protected void onResume() {
+		super.onResume();
+		boolean enabled = locationManager
+				.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+		// Check if enabled and if not send user to the GSP settings
+		// Better solution would be to display a dialog and suggesting to 
+		// go to the settings
+		if (!enabled) {
+			Toast.makeText(getApplicationContext(), "GPS not active", Toast.LENGTH_SHORT).show();
+		} else {
+			locationManager.requestLocationUpdates(provider, 400, 1, this);
+		}
+	}
+	@Override
+	protected void onPause() {
+		super.onPause();
+		locationManager.removeUpdates(this);
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		lat =  (location.getLatitude());
+		lon = (location.getLongitude());
+		Toast.makeText(getApplicationContext(), "Location fetched, your location is ("+lat+", "+lon+")", Toast.LENGTH_LONG).show();
+		if(pd!=null)
+			pd.dismiss();
+	}
+	@Override
+	public void onProviderDisabled(String provider) {
+
+	}
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+
 	}
 }

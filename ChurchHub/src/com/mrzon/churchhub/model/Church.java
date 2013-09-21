@@ -74,7 +74,7 @@ public class Church implements Serializable {
 	public void setAddress(String address) {
 		this.address = address;
 	}
-	public void setWorships(ArrayList<Worship> worships) {
+	public void setWorships(List<Worship> worships) {
 		this.worships = worships;
 	}
 	public String getWebsite() {
@@ -106,7 +106,7 @@ public class Church implements Serializable {
 	private Date esDate;
 
 	private String address;
-	private ArrayList<Worship> worships;
+	private List<Worship> worships;
 
 	private String website;
 
@@ -116,13 +116,7 @@ public class Church implements Serializable {
 	private String id;
 
 	public ParseObject getPObject() {
-		ParseObject pob = null;	
-		ParseQuery<ParseObject> query = ParseQuery.getQuery("Church");
-		try {
-			pob = query.get(this.id);
-		} catch (ParseException e1) {
-			e1.printStackTrace();
-		}
+		ParseObject pob = ParseObject.createWithoutData("Church", id);
 		return pob;
 	}
 
@@ -132,29 +126,8 @@ public class Church implements Serializable {
 	public void setId(String id) {
 		this.id = id;
 	}
-	public WorshipWeek getNextWorship() {
-		Calendar c = Calendar.getInstance(); 
-		WorshipWeek nextWorship = null;
-		int hour = c.get(Calendar.HOUR_OF_DAY);
-		if(nextWorship==null||nextWorship.getWorship().getStart()+nextWorship.getWorship().getEnd() < hour) {
-			ParseQuery<ParseObject> rel = getPObject().getRelation("worships").getQuery();
-			//rel.whereLessThan("end", hour);
-			try {
-				ParseObject po = rel.getFirst();
-				Worship w = Helper.createWorship(po,this);
-				ParseQuery<ParseObject> query = ParseQuery.getQuery("WeeklyWorship");
-				query.whereEqualTo("worship", po);
-				//query.whereEqualTo("active", true);
-				ParseObject ob = query.getFirst();
-				nextWorship = Helper.createWorshipWeek(ob, w);
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	
-		}
-		return nextWorship;
-	}
 
+	@SuppressWarnings("unused")
 	public void submit() throws ParseException {
 		// TODO Auto-generated method stub
 		ParseObject po = new ParseObject("Church");
@@ -182,7 +155,7 @@ public class Church implements Serializable {
 		this.setId(po.getObjectId());
 	}
 
-	public ArrayList<Worship> getWorships(){
+	public List<Worship> getWorships(){
 		if(worships==null) {
 			ArrayList<Worship> worships = new ArrayList<Worship>();
 			ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Worship");
@@ -214,5 +187,19 @@ public class Church implements Serializable {
 		if(0==count) {
 			submit();
 		}
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o instanceof Church) {
+			Church c = (Church) o;
+			return c.getId().equals(getId());
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return getId().hashCode();
 	}
 }

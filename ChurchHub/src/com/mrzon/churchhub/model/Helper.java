@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import junit.framework.Assert;
+
 import org.json.JSONObject;
 
 import android.app.Activity;
@@ -22,12 +24,14 @@ import android.widget.Toast;
 
 import com.mrzon.churchhub.BrowseChurchActivity;
 import com.mrzon.churchhub.BrowseCountryActivity;
+import com.mrzon.churchhub.util.Util;
 import com.parse.*;
 public class Helper {
 	public static void attend(WorshipWeek w,String message) {
 		ParseObject attend = new ParseObject("Attendance");
 		attend.put("message", message);
 		ParseUser user = ParseUser.getCurrentUser();
+		Assert.assertNotNull(user);
 		attend.put("user", user);
 		ParseObject wk = ParseObject.createWithoutData("WeeklyWorship", w.getId());
 		attend.put("weeklyworship", wk);
@@ -70,31 +74,115 @@ public class Helper {
 		attendance.setDate(ob.getCreatedAt());
 		attendance.setMessage(ob.getString("message"));
 		attendance.setUser(createUser(ob.getParseUser("user")));
+		attendance.setChurch(createChurch(ob.getParseObject("church"), null));
 		return attendance;
 	}
+	public static List<Attendance> getAttendances(long l, boolean cache,
+			Activity activity) {
+		List<Attendance> attendances = new ArrayList<Attendance>();
+		if (ParseUser.getCurrentUser() == null) {
+			return attendances;
+		}
+		String FILENAME = "ATTENDANCE_HISTORY_"+UserHelper.currentUser.getId();
+		boolean rewrite = false;
 
-	public static ArrayList<Attendance> getAttendance(Church church,int limit) {
-		ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Attendance");
-		query.whereEqualTo("church", church.getPObject());
-		query.setLimit(limit);
-		List<ParseObject> list = null;
 		try {
-			list = query.find();
-		} catch (ParseException e) {
+			attendances = (List<Attendance>)readSerializableObject(FILENAME, activity);
+		} catch (FileNotFoundException e) {
+			cache = false;
+			e.printStackTrace();
+		} catch (StreamCorruptedException e) {
+			cache = false;
+			e.printStackTrace();
+		} catch (IOException e) {
+			cache = false;
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-		ArrayList<Attendance> atts = new ArrayList<Attendance>();
-		for(int i = 0; i < list.size(); i++) {
+		if(!cache) {
+			ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Attendance");
+			List<ParseObject> objects;
+			List<Attendance> temp = new ArrayList<Attendance>();
+			if(l!=-1l) {
+				query.whereGreaterThanOrEqualTo("updatedAt", new Date(l));
+			} else {
+				rewrite = true;
+			}
+			query.whereEqualTo("user", ParseUser.getCurrentUser());
 			try {
-				list.get(i).fetchIfNeeded();
+				objects = query.find();
+				for(int i=0; i < objects.size(); i++) {
+					temp.add(createAttendance(objects.get(i),null));
+				}
+				if(!rewrite) {
+					attendances.addAll(temp);
+				} else {
+					attendances = temp;
+				}
+				writeSerializableObject(FILENAME, attendances, activity);
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			ParseObject pow = list.get(i).getParseObject("worshipweek");
-			atts.add(createAttendance(list.get(i), null));
 		}
-		return atts;
+
+		return attendances;
+	}
+
+	public static ArrayList<Attendance> getAttendance(Church church, boolean cache, int limit, Activity a) {
+		ArrayList<Attendance> attends = new ArrayList<Attendance>();
+		String filename = "ATTENDANCE_"+church.getId();
+		boolean rewrite = false;
+		if(cache) {
+			try {
+				attends = (ArrayList<Attendance>) readSerializableObject(filename, a);
+			} catch (OptionalDataException e) {
+				cache = false;
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				cache = true;
+				e.printStackTrace();
+			} catch (IOException e) {
+				cache = true;
+				e.printStackTrace();
+			}
+		}
+		
+		if(!cache) {
+			ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Attendance");
+			query.whereEqualTo("church", church.getPObject());
+			query.setLimit(limit);
+			List<ParseObject> list = null;
+			try {
+				try {
+					list = query.find();
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				ArrayList<Attendance> atts = new ArrayList<Attendance>();
+				for(int i = 0; i < list.size(); i++) {
+					try {
+						list.get(i).fetchIfNeeded();
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					ParseObject pow = list.get(i).getParseObject("worshipweek");
+					atts.add(createAttendance(list.get(i), null));
+				}
+				writeSerializableObject(filename, atts, a);
+				return atts;
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return attends;
 	}
 
 	/**
@@ -111,9 +199,7 @@ public class Helper {
 		String FILENAME = "denomination_list";
 		boolean rewrite = false;
 
-		FileInputStream in = null;
 		try {
-			in = activity.openFileInput(FILENAME);
 			d = (List<Denomination>)readSerializableObject(FILENAME, activity);
 		} catch (FileNotFoundException e) {
 			cache = false;
@@ -160,6 +246,12 @@ public class Helper {
 
 	public static Church createChurch(ParseObject ob,Denomination dn) {
 		Church church = new Church();
+		try {
+			ob.fetchIfNeeded();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
 		church.setName(ob.getString("name"));
 		church.setAddress(ob.getString("address"));
 		church.setPhoneNumber(ob.getString("phoneNumber"));
@@ -195,10 +287,11 @@ public class Helper {
 		worship.setEnd(po.getDouble("end"));
 		worship.setId(po.getObjectId());
 		worship.setName(po.getString("name"));
+		worship.setDay(po.getInt("day"));
 		return worship;
 	}
 
-	public static WorshipWeek createWorshipWeek(ParseObject po, Worship w) {
+	public static WorshipWeek createWorshipWeek(ParseObject po) {
 		// TODO Auto-generated method stub
 		WorshipWeek worshipWeek = new WorshipWeek();
 
@@ -211,7 +304,7 @@ public class Helper {
 		worshipWeek.setWorship(createWorship(po.getParseObject("worship"), null));
 		worshipWeek.setId(po.getObjectId());
 		worshipWeek.setSpeaker(po.getString("speaker"));
-		worshipWeek.setWorshipDate(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
+		worshipWeek.setWorshipWeek(Calendar.getInstance().get(Calendar.WEEK_OF_YEAR));
 		return worshipWeek;
 	}
 
@@ -220,7 +313,7 @@ public class Helper {
 		List<Church> d = new ArrayList<Church>();
 		String d_id=denomination==null?"":denomination.getId();
 		String r_id=region==null?"":region.getId();
-		
+
 		String FILENAME = "church_list_of_"+d_id+r_id;
 		boolean rewrite = false;
 
@@ -297,10 +390,10 @@ public class Helper {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-		
+
 		if(!cache) {
 			ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Country");
-			
+
 			List<ParseObject> objects;
 			List<Country> temp = new ArrayList<Country>();
 			if(l!=-1l) {
@@ -337,11 +430,11 @@ public class Helper {
 		in.close();
 		return o;
 	}
-	
+
 	public static void writeSerializableObject(String filename, Object o, Activity activity) throws IOException {
 		FileOutputStream fos = null;
 		fos = activity.openFileOutput(filename, Context.MODE_PRIVATE);
-		
+
 		ObjectOutputStream out = new ObjectOutputStream(fos);
 		out.writeObject(o);
 		out.close();
@@ -350,7 +443,7 @@ public class Helper {
 	public static List<Worship> getWorships(Church church, long l, boolean cache,
 			Activity activity) {
 		List<Worship> worships = new ArrayList<Worship>();
-		
+
 		String FILENAME = "worship_list_of_"+church.getId();
 		boolean rewrite = false;
 
@@ -397,8 +490,33 @@ public class Helper {
 				e.printStackTrace();
 			}
 		}
-		
-		
+
+
 		return worships;
+	}
+	
+
+	public static void getTodaysActiveWorship(Church ch, List<Worship> pa,List<WorshipWeek> ww) {
+		ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("WeeklyWorship");
+		ParseQuery<ParseObject> worshipQuery = new ParseQuery<ParseObject>("Worship");
+		worshipQuery.whereEqualTo("church", ch.getPObject());
+		int today = Util.getCurrentDayOfTheWeek();
+		worshipQuery.whereEqualTo("day", today);
+		query.whereMatchesQuery("worship", worshipQuery);
+		query.whereEqualTo("weekOfYear", Util.getCurrentWeekOfTheYear());
+		try {
+			List<ParseObject>objects = query.find();
+			ww.clear();
+			for(int i=0; i < objects.size(); i++) {
+				ww.add(createWorshipWeek(objects.get(i)));
+			}
+			objects = worshipQuery.find();
+			pa.clear();
+			for(int i=0; i < objects.size(); i++) {
+				pa.add(createWorship(objects.get(i),ch));
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 	}
 }

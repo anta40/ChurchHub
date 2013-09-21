@@ -1,5 +1,11 @@
 package com.mrzon.churchhub.util;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Date;
+
+import android.text.format.DateFormat;
+
 public class Util {
 	public static double distFrom(float lat1, float lng1, float lat2, float lng2) {
 		double earthRadius = 3958.75;
@@ -19,13 +25,74 @@ public class Util {
 	public double getLatMin(double lat, int distance){
 		return 0;
 	}
+	
 	public double getLatMax(double lat, int distance){
 		return 0;
 	}
+	
 	public double getLonMin(double lon, int distance){
 		return 0;
 	}
+	
 	public double getLonMax(double lon, int distance){
 		return 0;
+	}
+	
+	public static int getCurrentWeekOfTheYear() {
+		GregorianCalendar now = new GregorianCalendar();
+	    now.setFirstDayOfWeek(GregorianCalendar.MONDAY);
+		int week = now.get(GregorianCalendar.WEEK_OF_YEAR);
+		if(now.get(Calendar.DAY_OF_WEEK)==Calendar.SUNDAY) {
+			return week - 1;
+		} else 
+			return week;
+	}
+	public static int getCurrentDayOfTheWeek() {
+	    Calendar now = GregorianCalendar.getInstance();
+	    now.setFirstDayOfWeek(GregorianCalendar.MONDAY);
+	    int day = now.get(GregorianCalendar.DAY_OF_WEEK);
+	    if(day == Calendar.SUNDAY) {
+	    	return 6;
+	    } else {
+	    	return day - 2;
+	    }
+	}
+	public static int getCurrentYear() {
+	    Calendar now = GregorianCalendar.getInstance();
+		return now.get(GregorianCalendar.YEAR);
+	}
+	public static Date getMinimumDateBasedOnWeekOfTheYear(int week) {
+		Calendar now = GregorianCalendar.getInstance();
+		now.setFirstDayOfWeek(GregorianCalendar.MONDAY);
+		now.set(GregorianCalendar.WEEK_OF_YEAR, week);
+		int i = week;
+		while(i == week) {
+			 now.add(GregorianCalendar.DAY_OF_YEAR, -1);
+			 i = now.get(GregorianCalendar.WEEK_OF_YEAR);
+		}
+		now.add(GregorianCalendar.DAY_OF_YEAR, 1);
+		return now.getTime();
+	}
+	
+	public static Date getMaximumDateBasedOnWeekOfTheYear(int week) {
+		Calendar now = GregorianCalendar.getInstance();
+		now.setFirstDayOfWeek(GregorianCalendar.MONDAY);
+		now.set(GregorianCalendar.WEEK_OF_YEAR, week);
+		int i = week;
+		while(i == week) {
+			 now.add(GregorianCalendar.DAY_OF_YEAR, 1);
+			 i = now.get(GregorianCalendar.WEEK_OF_YEAR);
+		}
+		now.add(GregorianCalendar.DAY_OF_YEAR, -1);
+		return now.getTime();
+	}
+	
+	public static String toDDMMMString(Date date) {
+		return DateFormat.format("dd MMM", date).toString();
+		
+	}
+	
+	public static String toDDMMYYYYString(Date date) {
+		return DateFormat.format("dd-MM-yyyy", date).toString();
 	}
 }

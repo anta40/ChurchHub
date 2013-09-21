@@ -1,8 +1,13 @@
 package com.mrzon.churchhub.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Attendance {
+public class Attendance implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4391226524512440880L;
 	private WorshipWeek worship;
 	public WorshipWeek getWorship() {
 		return worship;

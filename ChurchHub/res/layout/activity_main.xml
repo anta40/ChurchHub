@@ -16,7 +16,12 @@
 		    android:layout_height="wrap_content"
 		    android:text="@string/login"
 		    />
-
+		<Button
+		    android:id="@+id/signup"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/signup"
+		    />
 	</LinearLayout>
 
 	<ScrollView
@@ -79,6 +84,7 @@
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
 	                android:layout_alignParentLeft="true"
+	                android:layout_alignRight="@+id/imageView1"
 	                android:layout_below="@+id/textView1"
 	                android:background="@color/recent_opt_color"
 	                android:drawablePadding="10dp"

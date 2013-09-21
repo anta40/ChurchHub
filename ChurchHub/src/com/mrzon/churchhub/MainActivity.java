@@ -37,6 +37,7 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -49,6 +50,8 @@ public class MainActivity extends RoboActivity  {
 	@InjectView(R.id.textView3)            private Button stats; 
 	@InjectView(R.id.textView4)            private Button recent; 
 	@InjectView(R.id.login)					private Button login;
+	@InjectView(R.id.signup)				private Button signup;
+	
 	public static final String CHURCH_EXTRA = "church";
 	public void setStyle() {
 		Typeface roboto_ti = Typeface.createFromAsset(
@@ -65,7 +68,6 @@ public class MainActivity extends RoboActivity  {
 
 	private void setAction() {
 		nearest.setOnClickListener(new View.OnClickListener() {
-			
 			@Override
 			public void onClick(View v) {
 				Intent intent = new Intent(MainActivity.this, NearestChurchActivity.class);
@@ -75,13 +77,20 @@ public class MainActivity extends RoboActivity  {
 		browse.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				// TODO Auto-generated method stub
 				CHDialog.BrowseDialogFragment dialog = new CHDialog.BrowseDialogFragment();
 				dialog.show(getFragmentManager(), "SHOW BROWSE DIALOG");
 			}
 		});
-		
+		signup.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				CHDialog.SignUpDialogFragment loginDialog = new CHDialog.SignUpDialogFragment();
+				loginDialog.show(getFragmentManager(), "SHOW SIGNUP DIALOG");
+			}
+
+		});
 		stats.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -94,8 +103,8 @@ public class MainActivity extends RoboActivity  {
 			
 			@Override
 			public void onClick(View v) {
-			
-			
+				Intent intent = new Intent(MainActivity.this, RecentAttendingActivity.class);
+				startActivity(intent);
 			}
 		});
 		
@@ -110,6 +119,7 @@ public class MainActivity extends RoboActivity  {
 					loginDialog.show(getFragmentManager(), "SHOW LOGIN DIALOG");
 					if(ParseUser.getCurrentUser()!=null) {
 						login.setText("Logout");
+						signup.setVisibility(View.INVISIBLE);
 					}
 				} else {
 					AlertDialog dialog = new AlertDialog.Builder (MainActivity.this).create();
@@ -121,6 +131,7 @@ public class MainActivity extends RoboActivity  {
 					    public void onClick (DialogInterface dialog, int buttonId) {
 					    	ParseUser.logOut();
 					    	login.setText("Login");
+					    	signup.setVisibility(View.VISIBLE);
 					  }
 					});
 					dialog.setButton (DialogInterface.BUTTON_NEGATIVE, "Cancel",
@@ -143,14 +154,26 @@ public class MainActivity extends RoboActivity  {
 		setContentView(R.layout.activity_main);
 		if(ParseUser.getCurrentUser()==null) {
 			login.setText("Login");
+			signup.setVisibility(View.VISIBLE);
 		} else {
 			login.setText("Logout");
+			signup.setVisibility(View.INVISIBLE);
 		}
 		setStyle();
 		setAction();
 	}
 
-
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	        case R.id.add_church:
+	        	Intent intent = new Intent(getBaseContext(), AddNewChurch.class);
+	            startActivity(intent);
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

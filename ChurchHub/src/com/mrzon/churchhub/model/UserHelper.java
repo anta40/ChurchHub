@@ -10,7 +10,11 @@ public class UserHelper {
 	private static User getCurrentUser() {
 		User u = new User();
 		ParseUser pu = ParseUser.getCurrentUser();
+		if(pu == null) {
+			return null;
+		}
 		u.setUserName(pu.getUsername());
+		u.setId(pu.getObjectId());
 		return u;
 	}
 

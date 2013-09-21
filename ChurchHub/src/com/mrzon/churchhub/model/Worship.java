@@ -29,6 +29,9 @@ public class Worship implements Serializable {
 		return pob;
 	}
 	public Church getChurch() {
+		if(church == null) {
+			church = Helper.createChurch(getPObject().getParseObject("church"), null);
+		}
 		return church;
 	}
 	public void setChurch(Church church) {
@@ -85,12 +88,30 @@ public class Worship implements Serializable {
 	}
 	
 	public String getDayString() {
-		String [] days = Resources.getSystem().getStringArray(R.array.days);
+//		String [] days = Resources.getSystem().getStringArray(R.array.days);
+		String [] days = {"Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"};
 		return days[day];
 	}
 	
 	public String getStartString() {
 		String hour = (int)getStart()+"";
+		if(hour.length()==1) {
+			hour = "0"+hour;
+		}
+		String minute = (int)(getStart()-(int)getStart())*60+"";
+		if(minute.length()==1) {
+			minute = "0"+minute;
+		}
+		return hour+":"+minute;
+	}
+	public String getEndString() {
+		String hour = (int)getEnd()+"";
 		if(hour.length()==1) {
 			hour = "0"+hour;
 		}

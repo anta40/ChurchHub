@@ -23,6 +23,7 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -55,13 +56,23 @@
             android:label="@string/title_activity_add_new_church" >
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
         <activity
             android:name="com.mrzon.churchhub.BrowseWorshipActivity"
             android:label="@string/title_activity_browse_worship" >
+        </activity>
+        <activity
+            android:name="com.mrzon.churchhub.RecentAttendingActivity"
+            android:label="@string/title_activity_recent_attending"
+            android:parentActivityName="com.mrzon.churchhub.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.mrzon.churchhub.MainActivity" />
         </activity>
     </application>
 

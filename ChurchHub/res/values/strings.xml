@@ -8,7 +8,7 @@
     <string name="map_description">Map Icon</string>
     <string name="nearest">Nearest Church</string>
     <string name="roboto_th">Roboto Th</string>
-    <string name="recent_opt">Recent Attending</string>
+    <string name="recent_opt">History</string>
     <string name="stats_opt">Stats</string>
     <string name="browse_opt">Browse</string>
     <string name="church_name">GKMI Bukit Hermon</string>
@@ -24,8 +24,10 @@
     <string name="add_denomination_message_p">Submit</string>
     <string name="add_denomination_message_n">Cancel</string>
     <string name="logout_message_dialog">Are you sure want to logout?</string>
+    <string name="signup_message_dialog">Please insert your registration info</string>
     <string name="login_message_dialog">Please insert username and password</string>
     <string name="login_message_p">Login</string>
+    <string name="signup">Sign Up</string>
     <string name="login_message_n">Cancel</string>
     <string name="attend_message_dialog">Put message to your attendance</string>
     <string name="attend_message_p">Attend</string>
@@ -51,18 +53,24 @@
     <string name="title_activity_browse_church">BrowseChurchActivity</string>
 
     <string-array name="days">
-        <item>Sunday</item>
         <item>Monday</item>
         <item>Tuesday</item>
         <item>Wednesday</item>
         <item>Thursday</item>
         <item>Friday</item>
         <item>Saturday</item>
+        <item>Sunday</item>
     </string-array>
 
     <string name="title_activity_browse_country">BrowseCountryActivity</string>
     <string name="title_activity_nearest_church">NearestChurchActivity</string>
     <string name="title_activity_add_new_church">Add New Church</string>
     <string name="title_activity_browse_worship">BrowseWorshipActivity</string>
+    <string name="title_activity_recent_attending">RecentAttendingActivity</string>
+    <string name="speaker">Speaker</string>
+    <string name="theme">Theme</string>
+    <string name="nats">Nats</string>
+    <string name="add_worship">Add Worship</string>
+    <string name="email">Email address</string>
 
 </resources>

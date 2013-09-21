@@ -1,44 +1,56 @@
 package com.mrzon.churchhub;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import roboguice.activity.RoboActivity;
 import roboguice.inject.InjectView;
-
-import com.handmark.pulltorefresh.library.PullToRefreshBase;
-import com.handmark.pulltorefresh.library.PullToRefreshListView;
-import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
-import com.mrzon.churchhub.model.Church;
-import com.mrzon.churchhub.model.Denomination;
-import com.mrzon.churchhub.model.Helper;
-import com.mrzon.churchhub.model.Region;
-import com.mrzon.churchhub.model.Worship;
-
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.Button;
+import android.widget.GridView;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.mrzon.churchhub.adapter.ListOfDateWorshipAdapter;
+import com.mrzon.churchhub.adapter.ListOfWeekAdapter;
+import com.mrzon.churchhub.adapter.ListOfWorshipAdapter;
+import com.mrzon.churchhub.model.Church;
+import com.mrzon.churchhub.model.Helper;
+import com.mrzon.churchhub.model.Worship;
+import com.mrzon.churchhub.model.WorshipWeek;
+import com.mrzon.churchhub.util.Util;
 
 public class BrowseWorshipActivity extends RoboActivity {
 
 	@InjectView(R.id.pull_refresh_list)		 	private PullToRefreshListView pullToRefreshView;
+	@InjectView(R.id.week_of_year)		 		private GridView weekOfYearList;
+	@InjectView(R.id.date_of_worship)		 	private GridView dateOfWorship;
+	@InjectView(R.id.add_worship_button)	 	private Button addWorshipButton;
+	
 	
 	private List<Worship> worships = null;
 	private Church church;
-	
+	private List<Integer> weekList;
+	private List<WorshipWeek> worshipWeeks;
+	private int year;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -76,20 +88,26 @@ public class BrowseWorshipActivity extends RoboActivity {
 		Typeface roboto_l = Typeface.createFromAsset(
 				this.getAssets(), 
 				"fonts/Roboto-Light.ttf");
-
 	}
 	
 	public void setContent() {
 		worships = Helper.getWorships(church,-1l,true,BrowseWorshipActivity.this);
 		if(this.worships==null) {
-			content.addAll(Arrays.asList(mcontent));
-		} else {
-			for(Worship d : worships) {
-				content.add(d.getName()+" - "+d.getDayString()+", "+d.getStartString());
-			}
+			worships = new ArrayList<Worship>();
 		}
-		mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, content);
+		year = Util.getCurrentYear();
+		int week = Util.getCurrentWeekOfTheYear();
+		weekList = new ArrayList<Integer>();
+		worshipWeeks = new ArrayList<WorshipWeek>();
+		for(int i = 0; i < 3; i++) {
+			weekList.add(week+i);
+		}
+		mAdapter = new ListOfWorshipAdapter(getBaseContext(), this, worships);
+		wAdapter = new ListOfWeekAdapter(getBaseContext(), this, weekList);
+		lAdapter = new ListOfDateWorshipAdapter(this, this, worships,weekList,worshipWeeks);
 		ListView actualListView = this.pullToRefreshView.getRefreshableView();
+		weekOfYearList.setAdapter(wAdapter);
+		dateOfWorship.setAdapter(lAdapter);
 		actualListView.setAdapter(mAdapter);
 		registerForContextMenu(actualListView);
 	}
@@ -101,46 +119,114 @@ public class BrowseWorshipActivity extends RoboActivity {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
 				Worship d = worships.get(arg2-1);
-				String str = ((TextView) arg1).getText().toString();
+				String str = d.getName();
 	            Toast.makeText(getBaseContext(),"Unimplemented yet", Toast.LENGTH_SHORT).show();
 	            /*Intent intent = new Intent(getBaseContext(), ChurchActivity.class);
 	            //intent.putExtra("church", d);
 	            startActivity(intent);*/
 			}
 		});
-	}
-	private class GetDataTask extends AsyncTask<Void, Void, String[]> {
-	    @Override
-	    protected void onPostExecute(String[] result) {
-	        // Call onRefreshComplete when the list has been refreshed.
-	    	content.clear();
-	    	content.addAll(Arrays.asList(result));
-			mAdapter.notifyDataSetChanged();
+		
+		dateOfWorship.setLongClickable(true);
+	    dateOfWorship.setOnItemLongClickListener(new OnItemLongClickListener() {
 
-			// Call onRefreshComplete when the list has been refreshed.
+	        public boolean onItemLongClick(AdapterView<?> parent, View arg1,
+	                int position, long arg3) {
+	            // TODO Auto-generated method stub
+	        	final WorshipWeek ww = worshipWeeks.get(position);
+	        	
+	        	final ProgressDialog pd = ProgressDialog.show(BrowseWorshipActivity.this, "Working..", "Getting worship week information", true);
+	        	
+	        	final Handler handler = new Handler() {
+	                 @Override
+	                     public void handleMessage(Message msg) {
+	                        pd.dismiss();
+	                        CHDialog.AddWorshipWeekInfoDialogFragment addDialog = new CHDialog.AddWorshipWeekInfoDialogFragment();
+	        	        	addDialog.setWorshipWeek(ww);
+	        				addDialog.show(getFragmentManager(), "ADD WORSHIP WEEK INFO DIALOG");
+	                 }
+	             };
+	             new Thread() {
+	                 public void run() {
+	                     try {
+	                    	 if(ww.getId()==null) {
+	                    		 ww.fetch();
+	                    	 }
+	         	        	handler.sendEmptyMessage(0);
+	                     } catch(Exception e) {
+	                         Log.e("threadmessage",e.getMessage());
+	                     }
+	                 }
+	             }.start();
+	            return true;
+	        }
+	    });
+
+	    dateOfWorship.setOnItemClickListener(new OnItemClickListener() {
+	        @Override
+	        public void onItemClick(AdapterView<?> parent, View view,
+	                int position, long id) {
+	           
+	        }
+	    });
+	    
+	    addWorshipButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment();
+				addDialog.setChurch(church);
+				addDialog.show(getFragmentManager(), "ADD WORSHIP DIALOG");
+			}
+		});
+	    ListView actualListView = this.pullToRefreshView.getRefreshableView();
+	    actualListView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+	    actualListView.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+			@Override
+			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+					int arg2, long arg3) {
+				CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment();
+				addDialog.setChurch(church);
+				addDialog.setWorship(worships.get(arg2-1));
+				addDialog.show(getFragmentManager(), "ADD WORSHIP DIALOG");
+				return true;
+			}
+		});
+	}
+	private class GetDataTask extends AsyncTask<Void, Void, Void> {
+	    @Override
+	    protected void onPostExecute(Void v) {
+			mAdapter.notifyDataSetChanged();
+			lAdapter.notifyDataSetChanged();
 			pullToRefreshView.onRefreshComplete();
-	        super.onPostExecute(result);
+	        super.onPostExecute(v);
 	    }
 
 		@Override
-		protected String[] doInBackground(Void... arg0) {
-			// TODO Auto-generated method stub
-			
+		protected Void doInBackground(Void... arg0) {
 			SharedPreferences pref = getPreferences(MODE_MULTI_PROCESS);
 			long updateTime = System.currentTimeMillis();
-			long l = pref.getLong(Church.latestUpdate, -1l);
-			pref.edit().putLong(Church.latestUpdate, updateTime).commit();
+			long l = pref.getLong(Worship.latestUpdate+"_"+church.getId(), -1l);
+			pref.edit().putLong(Worship.latestUpdate+"_"+church.getId(), updateTime).commit();
 			List<Worship> list = Helper.getWorships(church, l, false,BrowseWorshipActivity.this);
 			worships=list;
-			String[] str = new String[worships.size()];
-			for(int i = 0; i < str.length; i++) {
-				Worship d = worships.get(i);
-				str[i] = d.getName()+" - "+d.getDayString()+", "+d.getStartString();
-			}
-			return str;
+			church.setWorships(worships);
+			return null;
 		}
 	}
-	private ArrayAdapter<String> mAdapter;
+	
+	private ListOfWorshipAdapter mAdapter;
+	private ListOfWeekAdapter wAdapter;
+	private ListOfDateWorshipAdapter lAdapter;
 	private String[] mcontent = new String[]{"No church found, please pull to refresh"};
 	private ArrayList<String> content= new ArrayList<String>();
 			
