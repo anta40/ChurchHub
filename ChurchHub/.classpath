@@ -2,12 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="lib" path="D:/Android/AndroidSideMenu-master/sidemenu.jar"/>
-	<classpathentry kind="lib" path="D:/Android/android-query-full.0.25.10.jar"/>
-	<classpathentry kind="src" path="/p2rlibrary"/>
-	<classpathentry exported="true" kind="lib" path="C:/Users/Adigun/git/ChurchHub/gridlayout_v7/libs/roboguice-2.0.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/android-support-v7-gridlayout"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK/android-support-v7-gridlayout"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="output" path="bin/classes"/>
