@@ -1,6 +1,6 @@
 # Android environment
 *.log
-*/bin/*
-*/gen/*
-.git
+bin/
+gen/
+.git/
 
