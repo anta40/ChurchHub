@@ -1,57 +1,42 @@
 package com.mrzon.churchhub;
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-
-import javax.inject.Inject;
-
-import roboguice.RoboGuice;
 import roboguice.activity.RoboActivity;
 import roboguice.inject.ContentView;
-import roboguice.inject.InjectResource;
 import roboguice.inject.InjectView;
 
-import com.mrzon.churchhub.model.Church;
-import com.parse.LogInCallback;
+import com.mrzon.churchhub.util.Util;
 import com.parse.Parse;
 import com.parse.ParseAnalytics;
-import com.parse.ParseException;
 import com.parse.ParseUser;
 
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.app.Activity;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
-import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.IntentFilter;
 import android.graphics.Typeface;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 @ContentView(R.layout.activity_main)
 public class MainActivity extends RoboActivity  {
-	@InjectView(R.id.textView1)            private Button nearest; 
-	@InjectView(R.id.textView2)            private Button browse; 
-	@InjectView(R.id.textView3)            private Button stats; 
-	@InjectView(R.id.textView4)            private Button recent; 
+	@InjectView(R.id.main_nearby_button)            private Button nearest; 
+	@InjectView(R.id.main_browse_button)            private Button browse; 
+	@InjectView(R.id.main_stats_button)            private Button stats; 
+	@InjectView(R.id.main_history_button)            private Button recent; 
 	@InjectView(R.id.login)					private Button login;
 	@InjectView(R.id.signup)				private Button signup;
-	
+	@InjectView(R.id.loginAsTV) 			private TextView loginAsLabel;
+	@InjectView(R.id.usernameField) 			private TextView usernameField;
+
 	public static final String CHURCH_EXTRA = "church";
 	public void setStyle() {
 		Typeface roboto_ti = Typeface.createFromAsset(
@@ -66,6 +51,7 @@ public class MainActivity extends RoboActivity  {
 		recent.setTypeface(roboto_l);
 	}
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	private void setAction() {
 		nearest.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -82,63 +68,54 @@ public class MainActivity extends RoboActivity  {
 			}
 		});
 		signup.setOnClickListener(new View.OnClickListener() {
-
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
 				CHDialog.SignUpDialogFragment loginDialog = new CHDialog.SignUpDialogFragment();
 				loginDialog.show(getFragmentManager(), "SHOW SIGNUP DIALOG");
 			}
 
 		});
 		stats.setOnClickListener(new View.OnClickListener() {
-			
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				
 			}
 		});
 		recent.setOnClickListener(new View.OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				Intent intent = new Intent(MainActivity.this, RecentAttendingActivity.class);
 				startActivity(intent);
 			}
 		});
-		
+
 		login.setOnClickListener(new View.OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
 				if(ParseUser.getCurrentUser()==null) {
 					CHDialog.LoginDialogFragment loginDialog = new CHDialog.LoginDialogFragment();
 					loginDialog.setView(login);
 					loginDialog.show(getFragmentManager(), "SHOW LOGIN DIALOG");
-					if(ParseUser.getCurrentUser()!=null) {
-						login.setText("Logout");
-						signup.setVisibility(View.INVISIBLE);
-					}
 				} else {
 					AlertDialog dialog = new AlertDialog.Builder (MainActivity.this).create();
-					  dialog.setTitle ("Logout");
-					  dialog.setMessage ("Are you sure want to logout");
-					  dialog.setCancelable (true);
-					  dialog.setButton (DialogInterface.BUTTON_POSITIVE, "Logout",
-					  new DialogInterface.OnClickListener () {
-					    public void onClick (DialogInterface dialog, int buttonId) {
-					    	ParseUser.logOut();
-					    	login.setText("Login");
-					    	signup.setVisibility(View.VISIBLE);
-					  }
+					dialog.setTitle ("Logout");
+					dialog.setMessage ("Are you sure want to logout");
+					dialog.setCancelable (true);
+					dialog.setButton (DialogInterface.BUTTON_POSITIVE, "Logout",
+							new DialogInterface.OnClickListener () {
+						public void onClick (DialogInterface dialog, int buttonId) {
+							ParseUser.logOut();
+							Intent intent = new Intent(Util.LOGOUT_EVENT);
+							LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(intent);
+						}
 					});
 					dialog.setButton (DialogInterface.BUTTON_NEGATIVE, "Cancel",
-					new DialogInterface.OnClickListener () {
-					  public void onClick (DialogInterface dialog, int buttonId) {
-						  
-					  }
+							new DialogInterface.OnClickListener () {
+						public void onClick (DialogInterface dialog, int buttonId) {
+
+						}
 					});
 					dialog.show();
 				}
@@ -153,26 +130,61 @@ public class MainActivity extends RoboActivity  {
 		ParseAnalytics.trackAppOpened(getIntent());
 		setContentView(R.layout.activity_main);
 		if(ParseUser.getCurrentUser()==null) {
+			loginAsLabel.setVisibility(View.INVISIBLE);
+			usernameField.setVisibility(View.INVISIBLE);
 			login.setText("Login");
 			signup.setVisibility(View.VISIBLE);
 		} else {
+			loginAsLabel.setVisibility(View.VISIBLE);
+			usernameField.setText(ParseUser.getCurrentUser().getUsername());
+			usernameField.setVisibility(View.VISIBLE);
 			login.setText("Logout");
 			signup.setVisibility(View.INVISIBLE);
 		}
 		setStyle();
 		setAction();
+		LocalBroadcastManager.getInstance(this).registerReceiver(loginReceiver,
+				new IntentFilter(Util.LOGIN_EVENT));
+		LocalBroadcastManager.getInstance(this).registerReceiver(logoutReceiver,
+				new IntentFilter(Util.LOGOUT_EVENT));
 	}
+	// Our handler for received Intents. This will be called whenever an Intent
+	// with an action named "custom-event-name" is broadcasted.
+	private BroadcastReceiver loginReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// Get extra data included in the Intent
+			String message = intent.getStringExtra("message");
+			signup.setVisibility(View.INVISIBLE);
+			login.setText("Logout");
+			loginAsLabel.setVisibility(View.VISIBLE);
+			usernameField.setText(ParseUser.getCurrentUser().getUsername());
+			usernameField.setVisibility(View.VISIBLE);
+			Log.d("receiver", "Got message: " + message);
+		}
+	};
+
+	private BroadcastReceiver logoutReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// Get extra data included in the Intent
+			signup.setVisibility(View.VISIBLE);
+			login.setText("Login");
+			loginAsLabel.setVisibility(View.INVISIBLE);
+			usernameField.setVisibility(View.INVISIBLE);
+		}
+	};
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle item selection
-	    switch (item.getItemId()) {
-	        case R.id.add_church:
-	        	Intent intent = new Intent(getBaseContext(), AddNewChurch.class);
-	            startActivity(intent);
-	        default:
-	            return super.onOptionsItemSelected(item);
-	    }
+		// Handle item selection
+		switch (item.getItemId()) {
+		case R.id.add_church:
+			Intent intent = new Intent(getBaseContext(), AddNewChurch.class);
+			startActivity(intent);
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@Override
@@ -182,5 +194,12 @@ public class MainActivity extends RoboActivity  {
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return true;
 	}
-
+	@Override
+	protected void onDestroy() {
+		// Unregister since the activity is about to be closed.
+		// This is somewhat like [[NSNotificationCenter defaultCenter] removeObserver:name:object:] 
+		LocalBroadcastManager.getInstance(this).unregisterReceiver(loginReceiver);
+		LocalBroadcastManager.getInstance(this).unregisterReceiver(logoutReceiver);
+		super.onDestroy();
+	}
 }

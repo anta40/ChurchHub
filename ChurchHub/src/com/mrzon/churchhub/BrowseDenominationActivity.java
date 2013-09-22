@@ -13,7 +13,9 @@ import com.mrzon.churchhub.model.Helper;
 import roboguice.activity.RoboActivity;
 import roboguice.inject.InjectView;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -79,6 +81,9 @@ public class BrowseDenominationActivity extends RoboActivity {
 		ListView actualListView = this.pullToRefreshView.getRefreshableView();
 		actualListView.setAdapter(mAdapter);
 		registerForContextMenu(actualListView);
+		TextView tv = new TextView(getApplicationContext());
+		tv.setText("No denomination available, add one");
+		pullToRefreshView.setEmptyView(tv);
 	}
 
 	private String[] getDenominationFromServer() {
@@ -161,6 +166,7 @@ public class BrowseDenominationActivity extends RoboActivity {
 		return true;
 	}
 	
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle item selection

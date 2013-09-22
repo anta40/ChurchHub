@@ -72,5 +72,8 @@
     <string name="nats">Nats</string>
     <string name="add_worship">Add Worship</string>
     <string name="email">Email address</string>
+    <string name="activity">Activity</string>
+    <string name="radius">Radius</string>
+    <string name="todays_worship">Today\'s worship</string>
 
 </resources>

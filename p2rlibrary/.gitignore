@@ -1,5 +1,5 @@
 # Android environment
 *.log
-*/bin/*
-*/gen/*
+bin/
+gen/
 

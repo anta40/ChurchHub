@@ -4,12 +4,26 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/sideView1"
-        android:layout_width="300dp"
-        android:layout_height="match_parent"
-        >
+	<LinearLayout
+	    xmlns:android="http://schemas.android.com/apk/res/android"
+	    xmlns:tools="http://schemas.android.com/tools"
+	    android:id="@+id/sideView1"
+	    android:layout_width="300dp"
+	    android:layout_height="match_parent"
+	    android:orientation="horizontal" >
 
+		<TextView 
+		    android:id="@+id/loginAsTV" 
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="Login as "/>
+		
+		<TextView
+		    android:id="@+id/usernameField"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="Maria" />
+		
 		<Button
 		    android:id="@+id/login"
 		    android:layout_width="wrap_content"
@@ -22,6 +36,7 @@
 		    android:layout_height="wrap_content"
 		    android:text="@string/signup"
 		    />
+		
 	</LinearLayout>
 
 	<ScrollView
@@ -30,8 +45,6 @@
 	    android:layout_height="match_parent" >
 
 	        <RelativeLayout
-	            xmlns:android="http://schemas.android.com/apk/res/android"
-	            xmlns:tools="http://schemas.android.com/tools"
 	            android:layout_width="match_parent"
 	            android:layout_height="517dp"
 	            tools:context=".MainActivity" >
@@ -46,12 +59,12 @@
 	                android:src="@drawable/logo" />
 
 	            <Button
-	                android:id="@+id/textView3"
+	                android:id="@+id/main_stats_button"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:layout_alignLeft="@+id/textView1"
+	                android:layout_alignLeft="@+id/main_nearby_button"
 	                android:layout_alignParentRight="true"
-	                android:layout_below="@+id/textView4"
+	                android:layout_below="@+id/main_history_button"
 	                android:background="@color/stats_opt_color"
 	                android:drawableLeft="@drawable/stats"
 	                android:drawablePadding="10dp"
@@ -63,12 +76,12 @@
 	                android:textStyle="italic" />
 
 	            <Button
-	                android:id="@+id/textView2"
+	                android:id="@+id/main_browse_button"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
 	                android:layout_alignParentLeft="true"
-	                android:layout_alignRight="@+id/textView4"
-	                android:layout_below="@+id/textView3"
+	                android:layout_alignRight="@+id/main_history_button"
+	                android:layout_below="@+id/main_stats_button"
 	                android:background="@color/browse_opt_color"
 	                android:drawablePadding="10dp"
 	                android:drawableRight="@drawable/browse"
@@ -80,12 +93,12 @@
 	                android:textStyle="italic" />
 
 	            <Button
-	                android:id="@+id/textView4"
+	                android:id="@+id/main_history_button"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
 	                android:layout_alignParentLeft="true"
 	                android:layout_alignRight="@+id/imageView1"
-	                android:layout_below="@+id/textView1"
+	                android:layout_below="@+id/main_nearby_button"
 	                android:background="@color/recent_opt_color"
 	                android:drawablePadding="10dp"
 	                android:drawableRight="@drawable/recent"
@@ -97,7 +110,7 @@
 	                android:textStyle="italic" />
 
 	            <Button
-	                android:id="@+id/textView1"
+	                android:id="@+id/main_nearby_button"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
 	                android:layout_alignParentRight="true"

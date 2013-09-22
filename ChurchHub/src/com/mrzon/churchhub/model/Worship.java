@@ -68,6 +68,9 @@ public class Worship implements Serializable {
 	private int day;
 	public void submit() throws ParseException {
 		ParseObject po = new ParseObject("Worship");
+		if(id != null) {
+			po.setObjectId(id);
+		}
 		po.put("name", name);
 		po.put("day", day);
 		po.put("start", start);

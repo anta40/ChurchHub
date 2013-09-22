@@ -10,6 +10,8 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -26,6 +28,7 @@ import com.mrzon.churchhub.model.Denomination;
 import com.mrzon.churchhub.model.Helper;
 import com.mrzon.churchhub.model.Worship;
 import com.mrzon.churchhub.model.WorshipWeek;
+import com.mrzon.churchhub.util.Util;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
@@ -111,6 +114,8 @@ public class CHDialog {
 		public void setWorship(Worship worship) {
 			w = worship;
 		}
+		
+		
 	}
 	public static class AddWorshipWeekInfoDialogFragment  extends DialogFragment {
 		private WorshipWeek worshipWeek;
@@ -225,6 +230,7 @@ public class CHDialog {
 					try {
 						ParseUser.logIn(name, pass);
 						login.setText("Logout");
+						sendMessage();
 					} catch (ParseException e) {
 						Toast.makeText(getActivity().getBaseContext(), "Login failed", Toast.LENGTH_SHORT).show();
 						e.printStackTrace();
@@ -242,6 +248,16 @@ public class CHDialog {
 
 		public void setView(Button login) {
 			this.login=login;
+		}
+		
+		// Send an Intent with an action named "custom-event-name". The Intent sent should 
+		// be received by the ReceiverActivity.
+		private void sendMessage() {
+		  Log.d("sender", "Broadcasting message");
+		  Intent intent = new Intent(Util.LOGIN_EVENT);
+		  // You can also include some extra data.
+		  intent.putExtra("message", "This is my message!");
+		  LocalBroadcastManager.getInstance(this.getActivity()).sendBroadcast(intent);
 		}
 	}
 	public static class SignUpDialogFragment extends DialogFragment {

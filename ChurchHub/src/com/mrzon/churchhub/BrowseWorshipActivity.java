@@ -5,11 +5,13 @@ import java.util.List;
 
 import roboguice.activity.RoboActivity;
 import roboguice.inject.InjectView;
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -24,6 +26,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
@@ -109,6 +112,9 @@ public class BrowseWorshipActivity extends RoboActivity {
 		weekOfYearList.setAdapter(wAdapter);
 		dateOfWorship.setAdapter(lAdapter);
 		actualListView.setAdapter(mAdapter);
+		TextView tv = new TextView(getApplicationContext());
+		tv.setText("No worship");
+		pullToRefreshView.setEmptyView(tv);
 		registerForContextMenu(actualListView);
 	}
 	private void setAction() {
@@ -138,7 +144,8 @@ public class BrowseWorshipActivity extends RoboActivity {
 	        	final ProgressDialog pd = ProgressDialog.show(BrowseWorshipActivity.this, "Working..", "Getting worship week information", true);
 	        	
 	        	final Handler handler = new Handler() {
-	                 @Override
+	                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+					@Override
 	                     public void handleMessage(Message msg) {
 	                        pd.dismiss();
 	                        CHDialog.AddWorshipWeekInfoDialogFragment addDialog = new CHDialog.AddWorshipWeekInfoDialogFragment();
@@ -171,6 +178,7 @@ public class BrowseWorshipActivity extends RoboActivity {
 	    });
 	    
 	    addWorshipButton.setOnClickListener(new OnClickListener() {
+			@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
@@ -191,6 +199,7 @@ public class BrowseWorshipActivity extends RoboActivity {
 		});
 	    actualListView.setOnItemLongClickListener(new OnItemLongClickListener() {
 
+			@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 			@Override
 			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
@@ -202,25 +211,27 @@ public class BrowseWorshipActivity extends RoboActivity {
 			}
 		});
 	}
-	private class GetDataTask extends AsyncTask<Void, Void, Void> {
+	private class GetDataTask extends AsyncTask<Void, Void, List<Worship>> {
 	    @Override
-	    protected void onPostExecute(Void v) {
+	    protected void onPostExecute(List<Worship> list) {
+	    	worships.clear();
+	    	worships.addAll(list);
+			church.setWorships(worships);
 			mAdapter.notifyDataSetChanged();
 			lAdapter.notifyDataSetChanged();
 			pullToRefreshView.onRefreshComplete();
-	        super.onPostExecute(v);
+	        super.onPostExecute(list);
 	    }
 
 		@Override
-		protected Void doInBackground(Void... arg0) {
+		protected List<Worship> doInBackground(Void... arg0) {
 			SharedPreferences pref = getPreferences(MODE_MULTI_PROCESS);
 			long updateTime = System.currentTimeMillis();
 			long l = pref.getLong(Worship.latestUpdate+"_"+church.getId(), -1l);
 			pref.edit().putLong(Worship.latestUpdate+"_"+church.getId(), updateTime).commit();
 			List<Worship> list = Helper.getWorships(church, l, false,BrowseWorshipActivity.this);
-			worships=list;
-			church.setWorships(worships);
-			return null;
+			
+			return list;
 		}
 	}
 	

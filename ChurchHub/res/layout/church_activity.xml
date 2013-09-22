@@ -5,22 +5,22 @@
     android:orientation="vertical" >
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginRight="37dp"
         android:orientation="vertical" >
 
         <TextView
             android:id="@+id/church_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="320dp"
+            android:layout_height="fill_parent"
             android:text="@string/church_name"
             android:textColor="@color/church_title_color"
-            android:textSize="@dimen/menu_font_size" />
+            android:textSize="@dimen/title_size" />
 
         <TextView
             android:id="@+id/church_address"
-            android:layout_width="142dp"
+            android:layout_width="224dp"
             android:layout_height="match_parent"
             android:text="@string/church_address"
             android:textAppearance="?android:attr/textAppearanceSmall"
@@ -33,15 +33,26 @@
             android:background="@drawable/map"
             android:contentDescription="@string/link_to_open_in_map" />
 
-        <ListView
-            android:id="@+id/listView1"
+        <TextView
+            android:id="@+id/main_nearby_button"
             android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/todays_worship" />
+
+        <ListView
+            android:id="@+id/list_of_active_worship"
+            android:layout_width="fill_parent"
             android:layout_height="110dp"
             android:clipChildren="true" >
-
         </ListView>
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/main_browse_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/activity" />
 
 	    <com.handmark.pulltorefresh.library.PullToRefreshListView
         android:id="@+id/pull_refresh_list"

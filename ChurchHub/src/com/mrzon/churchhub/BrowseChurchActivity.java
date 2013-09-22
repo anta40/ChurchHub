@@ -16,7 +16,9 @@ import com.mrzon.churchhub.model.Helper;
 import com.mrzon.churchhub.model.Region;
 
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -92,6 +94,9 @@ public class BrowseChurchActivity extends RoboActivity {
 		ListView actualListView = this.pullToRefreshView.getRefreshableView();
 		actualListView.setAdapter(mAdapter);
 		registerForContextMenu(actualListView);
+		TextView tv = new TextView(getApplicationContext());
+		tv.setText("No church in this denomination, add one");
+		pullToRefreshView.setEmptyView(tv);
 	}
 	private void setAction() {
 		// TODO Auto-generated method stub
@@ -149,6 +154,7 @@ public class BrowseChurchActivity extends RoboActivity {
 		getMenuInflater().inflate(R.menu.browse_church, menu);
 		return true;
 	}
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection

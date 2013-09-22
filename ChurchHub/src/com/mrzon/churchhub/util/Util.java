@@ -7,10 +7,15 @@ import java.util.Date;
 import android.text.format.DateFormat;
 
 public class Util {
-	public static double distFrom(float lat1, float lng1, float lat2, float lng2) {
+	public static String LOGIN_EVENT = "LOGIN_EVENT";
+	public static String LOGOUT_EVENT = "LOGOUT_EVENT";
+	public static String RECEIVE_ACTIVE_WORSHIP_EVENT = "RECEIVE_ACTIVE_WORSHIP_EVENT";
+	public static String OBJECT_ADDED_EVENT = "OBJECT_ADDED_EVENT";
+	
+	public static double distFrom(double lat1, double lon1, double lat2, double lon2) {
 		double earthRadius = 3958.75;
 		double dLat = Math.toRadians(lat2-lat1);
-		double dLng = Math.toRadians(lng2-lng1);
+		double dLng = Math.toRadians(lon2-lon1);
 		double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
 				Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
 				Math.sin(dLng/2) * Math.sin(dLng/2);
@@ -22,19 +27,29 @@ public class Util {
 		return dist * meterConversion;
 	}
 	
-	public double getLatMin(double lat, int distance){
+	public static String getPreetyDistance(double meters) {
+		if(meters>10000) {
+			return ">10km";
+		}
+		if(meters>1000) {
+			return ((int)meters)/1000+"."+(((int)meters)%1000)/100+"km";
+		}
+		return ((int)meters)+"m";
+	}
+	
+ 	public double getLatMin(double lat, int distance) {
 		return 0;
 	}
 	
-	public double getLatMax(double lat, int distance){
+	public double getLatMax(double lat, int distance) {
 		return 0;
 	}
 	
-	public double getLonMin(double lon, int distance){
+	public double getLonMin(double lon, int distance) {
 		return 0;
 	}
 	
-	public double getLonMax(double lon, int distance){
+	public double getLonMax(double lon, int distance) {
 		return 0;
 	}
 	

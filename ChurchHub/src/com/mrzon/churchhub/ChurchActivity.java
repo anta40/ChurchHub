@@ -22,7 +22,9 @@ import roboguice.inject.ContentView;
 import roboguice.inject.InjectView;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -42,7 +44,7 @@ public class ChurchActivity extends RoboActivity  {
 	@InjectView(R.id.church_address)          	private TextView address; 
 	@InjectView(R.id.map_button)             	private ImageButton mapButton; 
 	@InjectView(R.id.pull_refresh_list)		 	private PullToRefreshListView pullToRefreshView;
-	@InjectView(R.id.listView1)		 			private ListView worshipListView;
+	@InjectView(R.id.list_of_active_worship)		 			private ListView worshipListView;
 	private ArrayAdapter<String> mAdapter;
 	private String[] mcontent = new String[]{"No attendee"};
 	private ArrayList<String> content= new ArrayList<String>();
@@ -72,33 +74,15 @@ public class ChurchActivity extends RoboActivity  {
 
 		name.setTypeface(roboto_t);
 		address.setTypeface(roboto_ti);
+		TextView tv = new TextView(getApplicationContext());
+		tv.setText("No activity");
+		TextView wv = new TextView(getApplicationContext());
+		tv.setText("No worship");
+//		worshipListView.setEmptyView(wv);
+		pullToRefreshView.setEmptyView(tv);
 	}
 
 	private void fetchInformation() {
-//		Worship w1 = new Worship();
-//		w1.setChurch(church);
-//		w1.setName("Kebaktian Umum 1");
-//		w1.setStart(9.0);
-//		w1.setEnd(11.0);
-//		w1.setDay(0);
-//		Worship w2 = new Worship();
-//		w2.setChurch(church);
-//		w2.setName("Sekolah minggu");
-//		w2.setStart(9.0);
-//		w2.setEnd(11.0);
-//		w2.setDay(0);
-//		WorshipWeek ww1 = new WorshipWeek();
-//		ww1.setWorship(w1);
-//		ww1.setId("j3hmA9ScEA");
-//		ww1.setAttended(false);
-//		ww1.setSpeaker("Pdt. M. Hariandja");
-//		WorshipWeek ww2 = new WorshipWeek();
-//		ww2.setWorship(w2);
-//		ww2.setId("qsKNKhijuR");
-//		ww2.setAttended(false);
-//		ww2.setSpeaker("Kak Amel");
-//		worshipWeeks.add(ww1);
-//		worshipWeeks.add(ww2);
 		Helper.getTodaysActiveWorship(church, todaysWorships, worshipWeeks);
 	}
 
@@ -211,6 +195,7 @@ public class ChurchActivity extends RoboActivity  {
 		return true;
 	}
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle item selection

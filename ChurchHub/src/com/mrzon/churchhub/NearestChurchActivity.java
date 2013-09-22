@@ -25,10 +25,22 @@ import com.mrzon.churchhub.model.Helper;
 import com.mrzon.churchhub.model.Province;
 import com.mrzon.churchhub.model.Region;
 import com.mrzon.churchhub.util.GPSTracker;
+import com.mrzon.churchhub.util.Util;
+import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseGeoPoint;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.mrzon.churchhub.adapter.*;
 
+import android.R.bool;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -39,6 +51,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
@@ -47,9 +61,21 @@ import android.support.v4.app.NavUtils;
 public class NearestChurchActivity extends RoboActivity {
 
 	@InjectView(R.id.pull_refresh_list)		 	private PullToRefreshListView pullToRefreshView;
-
+	@InjectView(R.id.radius_seekbar)		 	private SeekBar radiusSeekbar;
+	@InjectView(R.id.radius_field)		 		private TextView radiusTextview;
+	
+	public static String RADIUS_CHANGED_EVENT = "RADIUS_CHANGED_EVENT";
+	
+	private static final double RADIUS_MAX = 10.0;
+	private static final double RADIUS_MIN = 2.0;
+	private double radius = RADIUS_MIN;
 	private List<Church> churches = null;
-
+	private GetDataTask task = new GetDataTask();
+	private void updateRadius() {
+		boolean a = task.cancel(true);
+		radius = RADIUS_MIN + ((double)radiusSeekbar.getProgress())/radiusSeekbar.getMax()*8;
+		radiusTextview.setText(Util.getPreetyDistance(radius*1000));
+	}
 	/**
 	 * 
 	 */
@@ -57,16 +83,23 @@ public class NearestChurchActivity extends RoboActivity {
 	private Denomination denomination;
 	private double lat;
 	private double lon;
+	private ParseGeoPoint currentLocation;
 	private String getAPIForCoordinate(double lat, double lon) {
 		return "https://api.foursquare.com/v2/venues/search?categoryId=4bf58dd8d48988d132941735&oauth_token=EDO2GW34NJ5QBUVL5YXQTDYK41X2QMFBHS1XCY1FZMJFWNVM&v=20111229&ll="+lat+","+lon;		
 	}
 	private Region region;
+	
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	private void setDisplayHome() {
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_nearest_church);
 		// Show the Up button in the action bar.
-		getActionBar().setDisplayHomeAsUpEnabled(true);
+		setDisplayHome();
 		pullToRefreshView.setOnRefreshListener(new OnRefreshListener<ListView>() {
 		    @Override
 		    public void onRefresh(PullToRefreshBase<ListView> refreshView) {
@@ -118,7 +151,12 @@ public class NearestChurchActivity extends RoboActivity {
 			return 0;
 		}   
 	}
-	
+	private Handler handler = new Handler() {
+        @Override
+            public void handleMessage(Message msg) {
+               mAdapter.notifyDataSetChanged();
+        }
+    };
 	public void asyncJson(String url){
 
 		//perform a Google search in just a few lines of code
@@ -180,21 +218,39 @@ public class NearestChurchActivity extends RoboActivity {
 		//churches = Helper.getChurches(region, denomination,-1l,true,NearestChurchActivity.this);
 		GPSTracker mGPS = new GPSTracker(this);
 
-
-		mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, content);
-		ListView actualListView = this.pullToRefreshView.getRefreshableView();
-		actualListView.setAdapter(mAdapter);
-		registerForContextMenu(actualListView);
 		if(mGPS.canGetLocation() ){
+			mGPS.getLocation();
 			double mLat=mGPS.getLatitude();
 			double mLong=mGPS.getLongitude();
-			String api = getAPIForCoordinate(mLat, mLong);
-			asyncJson(api);
+			currentLocation = new ParseGeoPoint(mLat,mLong);
+			ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Church");
+			query.whereWithinKilometers("location", new ParseGeoPoint(mLat, mLong), radius);
+			query.findInBackground(new FindCallback<ParseObject>() {
+				
+				@Override
+				public void done(List<ParseObject> arg0, ParseException arg1) {
+					// TODO Auto-generated method stub
+					churches.clear();
+					for(int i = 0; i < arg0.size(); i++) {
+						churches.add(Helper.createChurch(arg0.get(i), null));
+					}
+					handler.handleMessage(null);
+				}
+			});
+			//AsyncTask<Params, Progress, Result>
+			//String api = getAPIForCoordinate(mLat, mLong);
+			//asyncJson(api);
 		}else{
 			// can't get the location
 		}
-
+		churches = new ArrayList<Church>();
+		mAdapter = new ListOfNearbyChurchAdapter(getApplicationContext(), currentLocation, churches);
+		ListView actualListView = this.pullToRefreshView.getRefreshableView();
+		radiusTextview.setText((radius+"")+" km");
+		actualListView.setAdapter(mAdapter);
+		registerForContextMenu(actualListView);
 	}
+
 	private void setAction() {
 		// TODO Auto-generated method stub
 		pullToRefreshView.getRefreshableView().setOnItemClickListener(new OnItemClickListener() {
@@ -203,11 +259,31 @@ public class NearestChurchActivity extends RoboActivity {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
 				Church d = churches.get(arg2-1);
-				String str = ((TextView) arg1).getText().toString();
-				Toast.makeText(getBaseContext(),"Opening church "+str, Toast.LENGTH_SHORT).show();
+				Toast.makeText(getBaseContext(),"Opening church "+d.getName(), Toast.LENGTH_SHORT).show();
 				Intent intent = new Intent(getBaseContext(), ChurchActivity.class);
 				intent.putExtra("church", d);
 				startActivity(intent);
+			}
+		});
+		
+		radiusSeekbar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			
+			@Override
+			public void onStopTrackingTouch(SeekBar arg0) {
+				// TODO Auto-generated method stub
+				updateRadius();
+			}
+			
+			@Override
+			public void onStartTrackingTouch(SeekBar arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onProgressChanged(SeekBar arg0, int arg1, boolean arg2) {
+				// TODO Auto-generated method stub
+				
 			}
 		});
 	}
@@ -215,38 +291,47 @@ public class NearestChurchActivity extends RoboActivity {
 		@Override
 		protected void onPostExecute(String[] result) {
 			// Call onRefreshComplete when the list has been refreshed.
-			content.clear();
-			content.addAll(Arrays.asList(result));
+//			content.clear();
+//			content.addAll(Arrays.asList(result));
 			mAdapter.notifyDataSetChanged();
 
 			// Call onRefreshComplete when the list has been refreshed.
 			pullToRefreshView.onRefreshComplete();
 			super.onPostExecute(result);
 		}
-
 		@Override
 		protected String[] doInBackground(Void... arg0) {
 			// TODO Auto-generated method stub
 			
 			GPSTracker mGPS = new GPSTracker(NearestChurchActivity.this);
-
+			Looper.prepare();
+			
 			if(mGPS.canGetLocation() ){
+				mGPS.getLocation();
 				double mLat=mGPS.getLatitude();
 				double mLong=mGPS.getLongitude();
-				String api = getAPIForCoordinate(mLat, mLong);
-				asyncJson(api);
+				//String api = getAPIForCoordinate(mLat, mLong);
+//				asyncJson(api);
+				ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Church");
+				query.whereWithinKilometers("location", new ParseGeoPoint(mLat, mLong), radius);
+				List<ParseObject> chs;
+				try {
+					chs = query.find();
+					churches.clear();
+					for(int i = 0; i < chs.size(); i++) {
+						churches.add(Helper.createChurch(chs.get(i), null));
+					}
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}else{
 				// can't get the location
 			}
-			String[] str = new String[churches.size()];
-			for(int i = 0; i < str.length; i++) {
-				Church d = churches.get(i);
-				str[i] = d.getName();
-			}
-			return str;
+			return null;
 		}
 	}
-	private ArrayAdapter<String> mAdapter;
+	private ListOfNearbyChurchAdapter mAdapter;
 	private String[] mcontent = new String[]{"No church found, please pull to refresh"};
 	private ArrayList<String> content= new ArrayList<String>();
 

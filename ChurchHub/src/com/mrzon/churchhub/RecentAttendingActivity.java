@@ -76,6 +76,9 @@ public class RecentAttendingActivity extends RoboActivity {
 		ListView actualListView = this.pullToRefreshView.getRefreshableView();
 		actualListView.setAdapter(mAdapter);
 		registerForContextMenu(actualListView);
+		TextView tv = new TextView(getApplicationContext());
+		tv.setText("No recent attending");
+		pullToRefreshView.setEmptyView(tv);
 	}
 
 	private String[] getAttendanceFromServer() {

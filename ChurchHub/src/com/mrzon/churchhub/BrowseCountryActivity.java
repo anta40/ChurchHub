@@ -15,7 +15,9 @@ import com.mrzon.churchhub.model.Denomination;
 import com.mrzon.churchhub.model.Helper;
 
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -104,7 +106,9 @@ public class BrowseCountryActivity extends RoboActivity {
 		ListView actualListView = this.pullToRefreshView.getRefreshableView();
 		actualListView.setAdapter(mAdapter);
 		registerForContextMenu(actualListView);
-		
+		TextView tv = new TextView(getApplicationContext());
+		tv.setText("No country is available, add one");
+		pullToRefreshView.setEmptyView(tv);
 	}
 	private void setAction() {
 		// TODO Auto-generated method stub
@@ -150,6 +154,7 @@ public class BrowseCountryActivity extends RoboActivity {
 		getMenuInflater().inflate(R.menu.activity_browse_country, menu);
 		return true;
 	}
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection
