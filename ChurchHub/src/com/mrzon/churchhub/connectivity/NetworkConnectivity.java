@@ -55,9 +55,9 @@ public class NetworkConnectivity {
 
 	private static final int NETWORK_CONNECTION_YES= 1;
 	private static final int NETWORK_CONNECTION_NO = -1;
-	private static final int NETWORK_CONNECTION_UKNOWN = 0;
+	private static final int NETWORK_CONNECTION_UNKNOWN = 0;
 
-	private int connected = NETWORK_CONNECTION_UKNOWN;
+	private int connected = NETWORK_CONNECTION_UNKNOWN;
 
 	public static final int MONITOR_RATE_WHEN_CONNECTED_MS = 5000;
 	public static final int MONITOR_RATE_WHEN_DISCONNECTED_MS = 1000;

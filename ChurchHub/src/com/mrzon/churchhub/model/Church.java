@@ -23,7 +23,11 @@ import com.parse.ParseRelation;
 public class Church implements Serializable {
 
 	private Long code;
-
+	public static final String latestUpdate = "CHURCH_LATEST_UPDATE";
+	private static final long serialVersionUID = -39876803275824193L;
+	private String mName;
+	private String mFoursquareId;
+	private int mDistance;
 	/**
 	 * 
 	 */
@@ -38,23 +42,19 @@ public class Church implements Serializable {
 		}
 		return church;
 	}
-	public static final String latestUpdate = "CHURCH_LATEST_UPDATE";
-	private static final long serialVersionUID = -39876803275824193L;
-	private String name;
-	private String foursquareId;
-	private int distance;
+	
 	public String getFoursquareId() {
-		return foursquareId;
+		return mFoursquareId;
 	}
 	public void setFoursquareId(String foursquareId) {
-		this.foursquareId = foursquareId;
+		this.mFoursquareId = foursquareId;
 	}
 	private ParseObject pob;
 	public String getName() {
-		return name;
+		return mName;
 	}
 	public void setName(String name) {
-		this.name = name;
+		this.mName = name;
 	}
 	public Denomination getDenomination() {
 		return denomination;
@@ -134,7 +134,7 @@ public class Church implements Serializable {
 		if(id!=null) {
 			po.get(id);
 		}
-		po.put("name", name);
+		po.put("name", mName);
 		if(website!=null)
 			po.put("website", website);
 		if(address!=null)
@@ -142,8 +142,8 @@ public class Church implements Serializable {
 		if(esDate!=null)
 		po.put("established", esDate);
 		po.put("location", new ParseGeoPoint(lat, lon));
-		if(foursquareId!=null)
-			po.put("foursquareid", foursquareId);
+		if(mFoursquareId!=null)
+			po.put("foursquareid", mFoursquareId);
 		Region region = null;
 		if(region!=null) {
 			po.put("region", region.getPObject());
@@ -173,16 +173,16 @@ public class Church implements Serializable {
 	}
 	public void setDistance(int int1) {
 		// TODO Auto-generated method stub
-		distance = int1;
+		mDistance = int1;
 	}
 
 	public int getDistance() {
-		return distance;
+		return mDistance;
 	}
 	public void submitIfNotExistedYet() throws ParseException {
 		// TODO Auto-generated method stub
 		ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Church");
-		query.whereEqualTo("foursquareid", foursquareId);
+		query.whereEqualTo("foursquareid", mFoursquareId);
 		int count = query.count();
 		if(0==count) {
 			submit();

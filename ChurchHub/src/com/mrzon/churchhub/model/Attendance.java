@@ -14,45 +14,42 @@ public class Attendance implements Serializable {
 	}
 
 	public Date getDate() {
-		return date;
+		return mDate;
 	}
 
 	public User getUser() {
-		return user;
+		return mUser;
 	}
 
-	private Date date;
-	private String message;
-	private User user;
-	private Church church;
 	public Church getChurch() {
-		return church;
+		return mChurch;
 	}
 
 	public void setChurch(Church church) {
-		this.church = church;
+		this.mChurch = church;
 	}
 
 	public void setWorshipWeek(WorshipWeek w) {
-		// TODO Auto-generated method stub
 		worship = w;
 	}
 
 	public void setDate(Date createdAt) {
-		// TODO Auto-generated method stub
-		date = createdAt;
+		mDate = createdAt;
 	}
 
 	public void setUser(User user) {
-		// TODO Auto-generated method stub
-		this.user = user;
+		this.mUser = user;
 	}
 	public void setMessage(String m) {
-		message = m;
+		mMessage = m;
 	}
 	public String getMessage() {
 		// TODO Auto-generated method stub
-		return message;
+		return mMessage;
 	}
 
+	private Date mDate;
+	private String mMessage;
+	private User mUser;
+	private Church mChurch;
 }
