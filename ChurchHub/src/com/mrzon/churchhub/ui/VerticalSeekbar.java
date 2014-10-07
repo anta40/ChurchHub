@@ -7,12 +7,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.SeekBar;
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.MotionEvent;
-
 public class VerticalSeekbar extends SeekBar {
 
     public VerticalSeekbar(Context context) {
@@ -54,10 +48,10 @@ public class VerticalSeekbar extends SeekBar {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
             case MotionEvent.ACTION_UP:
-            	int i=0;
-            	i=getMax() - (int) (getMax() * event.getY() / getHeight());
-                setProgress(100-i);
-                Log.i("Progress",getProgress()+"");
+                int i = 0;
+                i = getMax() - (int) (getMax() * event.getY() / getHeight());
+                setProgress(100 - i);
+                Log.i("Progress", getProgress() + "");
                 onSizeChanged(getWidth(), getHeight(), 0, 0);
                 break;
 
@@ -66,5 +60,5 @@ public class VerticalSeekbar extends SeekBar {
         }
         return true;
     }
-    
+
 }

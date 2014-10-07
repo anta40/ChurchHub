@@ -17,7 +17,9 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
     <color name="nearest_opt_color">#9DEE61</color>
-    <color name="recent_opt_color">#FFB335</color><color name="stats_opt_color">#BB2E63</color><color name="browse_opt_color">#D4E497</color>
+    <color name="recent_opt_color">#FFB335</color>
+    <color name="stats_opt_color">#BB2E63</color>
+    <color name="browse_opt_color">#D4E497</color>
     <color name="church_title_box_color">#004455</color>
     <color name="church_title_color">#6A94C0</color>
     <color name="church_address_color">#79736B</color>

@@ -1,46 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" >
+    android:layout_width="wrap_content" android:layout_height="wrap_content"
+    android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginTop="16dp"
-        android:hint="@string/worship_name"
+    <EditText android:id="@+id/name" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginBottom="4dp"
+        android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+        android:layout_marginTop="16dp" android:hint="@string/worship_name"
         android:inputType="text" />
 
-    <EditText
-        android:id="@+id/start"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginTop="16dp"
-        android:hint="@string/start_time_eg_8_30"
+    <EditText android:id="@+id/start" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginBottom="4dp"
+        android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+        android:layout_marginTop="16dp" android:hint="@string/start_time_eg_8_30"
         android:inputType="text" />
 
-    <EditText
-        android:id="@+id/end"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginTop="16dp"
-        android:hint="@string/end_time_eg_11_30"
+    <EditText android:id="@+id/end" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginBottom="4dp"
+        android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+        android:layout_marginTop="16dp" android:hint="@string/end_time_eg_11_30"
         android:inputType="text" />
 
-    <Spinner
-        android:id="@+id/Spinner01"
-        android:layout_width="match_parent"
+    <Spinner android:id="@+id/Spinner01" android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
- 
+
 </LinearLayout>

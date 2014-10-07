@@ -4,52 +4,54 @@ import java.io.Serializable;
 import java.util.Date;
 
 public class Attendance implements Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4391226524512440880L;
-	private WorshipWeek worship;
-	public WorshipWeek getWorship() {
-		return worship;
-	}
+    /**
+     *
+     */
+    private static final long serialVersionUID = 4391226524512440880L;
+    private WorshipWeek worship;
+    private Date mDate;
+    private String mMessage;
+    private User mUser;
+    private Church mChurch;
 
-	public Date getDate() {
-		return mDate;
-	}
+    public WorshipWeek getWorship() {
+        return worship;
+    }
 
-	public User getUser() {
-		return mUser;
-	}
+    public Date getDate() {
+        return mDate;
+    }
 
-	public Church getChurch() {
-		return mChurch;
-	}
+    public void setDate(Date createdAt) {
+        mDate = createdAt;
+    }
 
-	public void setChurch(Church church) {
-		this.mChurch = church;
-	}
+    public User getUser() {
+        return mUser;
+    }
 
-	public void setWorshipWeek(WorshipWeek w) {
-		worship = w;
-	}
+    public void setUser(User user) {
+        this.mUser = user;
+    }
 
-	public void setDate(Date createdAt) {
-		mDate = createdAt;
-	}
+    public Church getChurch() {
+        return mChurch;
+    }
 
-	public void setUser(User user) {
-		this.mUser = user;
-	}
-	public void setMessage(String m) {
-		mMessage = m;
-	}
-	public String getMessage() {
-		// TODO Auto-generated method stub
-		return mMessage;
-	}
+    public void setChurch(Church church) {
+        this.mChurch = church;
+    }
 
-	private Date mDate;
-	private String mMessage;
-	private User mUser;
-	private Church mChurch;
+    public void setWorshipWeek(WorshipWeek w) {
+        worship = w;
+    }
+
+    public String getMessage() {
+        // TODO Auto-generated method stub
+        return mMessage;
+    }
+
+    public void setMessage(String m) {
+        mMessage = m;
+    }
 }

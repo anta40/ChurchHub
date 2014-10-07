@@ -1,21 +1,14 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/save" 
-        android:visible="true" 
-        android:title="Save"
-        android:icon="@drawable/unsaved" android:enabled="true">
-        
+    <item android:id="@+id/save" android:enabled="true" android:icon="@drawable/unsaved"
+        android:title="Save" android:visible="true">
+
     </item>
-    <item
-        android:id="@+id/add_worship_item"
-        android:orderInCategory="100"
-        android:showAsAction="always"
-        android:title="Add worship"/>
-    <item
-        android:id="@+id/menu_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/menu_settings"/>
-    <item android:id="@+id/view_worships" android:visible="true" android:title="View all worships" android:showAsAction="always"></item>
+    <item android:id="@+id/add_worship_item" android:orderInCategory="100"
+        android:showAsAction="always" android:title="Add worship" />
+    <item android:id="@+id/menu_settings" android:orderInCategory="100" android:showAsAction="never"
+        android:title="@string/menu_settings" />
+    <item android:id="@+id/view_worships" android:showAsAction="always" android:title="View all worships"
+        android:visible="true"></item>
 
 </menu>
