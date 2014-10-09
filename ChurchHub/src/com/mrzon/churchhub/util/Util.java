@@ -9,6 +9,7 @@ import java.util.GregorianCalendar;
 public class Util {
     public static String LOGIN_EVENT = "LOGIN_EVENT";
     public static String LOGOUT_EVENT = "LOGOUT_EVENT";
+    public static String UPDATE_WORSHIP_EVENT = "UPDATE_WORSHIP_EVENT";
     public static String RECEIVE_ACTIVE_WORSHIP_EVENT = "RECEIVE_ACTIVE_WORSHIP_EVENT";
     public static String OBJECT_ADDED_EVENT = "OBJECT_ADDED_EVENT";
 

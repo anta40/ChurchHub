@@ -1,7 +1,11 @@
 package com.mrzon.churchhub;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -9,6 +13,10 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +39,7 @@ import com.mrzon.churchhub.model.User;
 import com.mrzon.churchhub.model.UserHelper;
 import com.mrzon.churchhub.model.Worship;
 import com.mrzon.churchhub.model.WorshipWeek;
+import com.mrzon.churchhub.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +90,12 @@ public class ChurchActivity extends RoboActivity {
 	 * Adapter to display string of activity
 	 */
 	private ArrayAdapter<String> mAdapter;
-    
+
+	/**
+	 * Adapter to display string of activity
+	 */
+	private ActiveWorshipAdapter mActiveWorshipAdapter;	
+	
 	/**
 	 * Content of the activity list
 	 */
@@ -150,6 +164,18 @@ public class ChurchActivity extends RoboActivity {
         pullToRefreshView.setEmptyView(tv);
     }
 
+    private BroadcastReceiver updateWorshipReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+        	setContent();
+        }
+    };
+
+    protected void onResume() {
+    	super.onResume();
+    	mActiveWorshipAdapter.notifyDataSetChanged();
+    }
     /**
      * Fetch Information to the activity
      */
@@ -160,24 +186,13 @@ public class ChurchActivity extends RoboActivity {
     /**
      * Set Content of the activity layout
      */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB) public void setContent() {
-        name.setText(church.getName());
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB) 
+    public void setContent() {
+    	name.setText(church.getName());
         address.setText(church.getAddress());
-       
         todaysWorships = new ArrayList<Worship>();
-        fetchInformation();
-        fetchAttendanceFromCache();
-        if (attendances != null) {
-            String[] str = new String[attendances.size()];
-            for (int i = 0; i < str.length; i++) {
-                Attendance a = attendances.get(i);
-                str[i] = a.getUser().getUserName() + " attended at " + a.getDate().toLocaleString() + " \"" + a.getMessage() + "\"";
-            }
-            content.addAll(Arrays.asList(str));
-        } else {
-            content.addAll(Arrays.asList(mcontent));
-        }
-        worshipListView.setAdapter(new ActiveWorshipAdapter(getBaseContext(), this, worshipWeeks));
+        mActiveWorshipAdapter = new ActiveWorshipAdapter(getBaseContext(), this, worshipWeeks);
+        worshipListView.setAdapter(mActiveWorshipAdapter);
         worshipListView.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -197,7 +212,42 @@ public class ChurchActivity extends RoboActivity {
         ListView actualListView = this.pullToRefreshView.getRefreshableView();
         actualListView.setAdapter(mAdapter);
         registerForContextMenu(actualListView);
+        
+        
+        
+    	final ProgressDialog pd = ProgressDialog.show(this, "Working..", "Get church information", true);
 
+        final Handler handler = new Handler() {
+            @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+            @Override
+            public void handleMessage(Message msg) {
+            	mAdapter.notifyDataSetChanged();
+            	mActiveWorshipAdapter.notifyDataSetChanged();
+                pd.dismiss();
+            }
+        };
+        new Thread() {
+            public void run() {
+                try {
+                	fetchInformation();
+                    fetchAttendanceFromCache();
+                    if (attendances != null) {
+                        String[] str = new String[attendances.size()];
+                        for (int i = 0; i < str.length; i++) {
+                            Attendance a = attendances.get(i);
+                            str[i] = a.getUser().getUserName() + " attended at " + a.getDate().toLocaleString() + " \"" + a.getMessage() + "\"";
+                        }
+                        content.addAll(Arrays.asList(str));
+                    } else {
+                        content.addAll(Arrays.asList(mcontent));
+                    }
+                    
+                    handler.sendEmptyMessage(0);
+                } catch (Exception e) {
+                    Log.e("threadmessage", e.getMessage());
+                }
+            }
+        }.start();
 
     }
     
@@ -241,7 +291,8 @@ public class ChurchActivity extends RoboActivity {
                 new GetDataActivityTask().execute();
             }
         });
-
+        LocalBroadcastManager.getInstance(this).registerReceiver(updateWorshipReceiver,
+                new IntentFilter(Util.UPDATE_WORSHIP_EVENT));
         setStyle();
         setAction();
         setContent();
@@ -251,22 +302,22 @@ public class ChurchActivity extends RoboActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.church_activity, menu);
-        User u = UserHelper.currentUser;
-        if (u != null) {
-            Intent i = getIntent();
-            Church ch = null;
-            String save = "Unsave";
-            if (i != null) {
-                ch = ((Church) i.getSerializableExtra(MainActivity.CHURCH_EXTRA));
-            }
-            Drawable icon = getResources().getDrawable(R.drawable.saved);
-            if (!u.savedChurchExist(ch)) {
-                icon = getResources().getDrawable(R.drawable.unsaved);
-                save = "Save";
-            }
-            menu.getItem(0).setIcon(icon);
-            menu.getItem(0).setTitle(save);
-        }
+//        User u = UserHelper.currentUser;
+//        if (u != null) {
+//            Intent i = getIntent();
+//            Church ch = null;
+//            String save = "Unsave";
+//            if (i != null) {
+//                ch = ((Church) i.getSerializableExtra(MainActivity.CHURCH_EXTRA));
+//            }
+//            Drawable icon = getResources().getDrawable(R.drawable.saved);
+//            if (!u.savedChurchExist(ch)) {
+//                icon = getResources().getDrawable(R.drawable.unsaved);
+//                save = "Save";
+//            }
+//            menu.getItem(0).setIcon(icon);
+//            menu.getItem(0).setTitle(save);
+//        }
         return true;
     }
 
@@ -276,7 +327,7 @@ public class ChurchActivity extends RoboActivity {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.add_worship_item:
-                CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment();
+                CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment(null);
                 addDialog.setChurch(this.getChurch());
                 addDialog.show(getFragmentManager(), "ADD WORSHIP DIALOG");
                 break;
@@ -285,16 +336,16 @@ public class ChurchActivity extends RoboActivity {
                 intent.putExtra("church", church);
                 startActivity(intent);
                 break;
-            case R.id.save:
-                User u = UserHelper.currentUser;
-                if (u != null) {
-                    if (!u.savedChurchExist(this.getChurch())) {
-                        u.addSavedChurch(getChurch());
-                    } else {
-                        u.removeSavedChurch(getChurch());
-                    }
-                }
-                break;
+//            case R.id.save:
+//                User u = UserHelper.currentUser;
+//                if (u != null) {
+//                    if (!u.savedChurchExist(this.getChurch())) {
+//                        u.addSavedChurch(getChurch());
+//                    } else {
+//                        u.removeSavedChurch(getChurch());
+//                    }
+//                }
+//                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -326,5 +377,10 @@ public class ChurchActivity extends RoboActivity {
             }
             return str;
         }
+    }
+    
+    protected void onDestroy(){
+    	LocalBroadcastManager.getInstance(this).unregisterReceiver(updateWorshipReceiver);
+    	super.onDestroy();
     }
 }

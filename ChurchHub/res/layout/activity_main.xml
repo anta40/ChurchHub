@@ -33,7 +33,7 @@
                 android:contentDescription="@string/logo_description"
                 android:src="@drawable/logo" />
 
-            <Button android:id="@+id/main_stats_button" android:layout_width="wrap_content"
+           <!--  <Button android:id="@+id/main_stats_button" android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignLeft="@+id/main_nearby_button"
                 android:layout_alignParentRight="true"
@@ -42,26 +42,23 @@
                 android:drawablePadding="10dp" android:fontFamily="@string/roboto_th"
                 android:padding="15dp" android:text="@string/stats_opt"
                 android:textColor="@color/church_worship_attend_box_color"
-                android:textSize="@dimen/menu_font_size" android:textStyle="italic" />
+                android:textSize="@dimen/menu_font_size" android:textStyle="italic" /> -->
 
-            <Button android:id="@+id/main_browse_button" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:layout_alignParentLeft="true"
-                android:layout_alignRight="@+id/main_history_button"
-                android:layout_below="@+id/main_stats_button"
-                android:background="@color/browse_opt_color" android:drawablePadding="10dp"
-                android:drawableRight="@drawable/browse" android:fontFamily="@string/roboto_th"
-                android:padding="15dp" android:text="@string/browse_opt"
-                android:textColor="@color/church_title_box_color"
-                android:textSize="@dimen/menu_font_size" android:textStyle="italic" />
-
-            <Button android:id="@+id/main_history_button" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:layout_alignParentLeft="true"
+            <Button
+                android:id="@+id/main_history_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
                 android:layout_alignRight="@+id/imageView1"
                 android:layout_below="@+id/main_nearby_button"
-                android:background="@color/recent_opt_color" android:drawablePadding="10dp"
-                android:drawableRight="@drawable/recent" android:fontFamily="@string/roboto_th"
-                android:padding="15dp" android:text="@string/recent_opt"
-                android:textColor="@color/stats_opt_color" android:textSize="@dimen/menu_font_size"
+                android:background="@color/recent_opt_color"
+                android:drawablePadding="10dp"
+                android:drawableRight="@drawable/recent"
+                android:fontFamily="@string/roboto_th"
+                android:padding="15dp"
+                android:text="@string/recent_opt"
+                android:textColor="@color/stats_opt_color"
+                android:textSize="@dimen/menu_font_size"
                 android:textStyle="italic" />
 
             <Button android:id="@+id/main_nearby_button" android:layout_width="wrap_content"
@@ -73,6 +70,24 @@
                 android:textColor="@color/church_worship_speaker_color"
                 android:textSize="@dimen/menu_font_size" android:textStyle="italic"
                 android:typeface="normal" />
+
+            <Button
+                android:id="@+id/main_browse_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/main_nearby_button"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/main_history_button"
+                android:background="@color/browse_opt_color"
+                android:drawablePadding="10dp"
+                android:drawableRight="@drawable/browse"
+                android:fontFamily="@string/roboto_th"
+                android:padding="15dp"
+                android:text="@string/browse_opt"
+                android:textColor="@color/church_title_box_color"
+                android:textSize="@dimen/menu_font_size"
+                android:textStyle="italic" />
+
         </RelativeLayout>
     </ScrollView>
 </com.agimind.widget.SlideHolder>

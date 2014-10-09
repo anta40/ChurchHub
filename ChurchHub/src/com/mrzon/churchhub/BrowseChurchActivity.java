@@ -1,12 +1,17 @@
 package com.mrzon.churchhub;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +29,7 @@ import com.mrzon.churchhub.model.Church;
 import com.mrzon.churchhub.model.Denomination;
 import com.mrzon.churchhub.model.Helper;
 import com.mrzon.churchhub.model.Region;
+import com.mrzon.churchhub.util.GPSTracker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,14 +135,35 @@ public class BrowseChurchActivity extends RoboActivity {
      * Set the activity layout content
      */
     public void setContent() {
-        churches = Helper.getChurches(region, denomination, -1l, true, this);
-        if (this.churches == null) {
-            content.addAll(Arrays.asList(mcontent));
-        } else {
-            for (Church d : churches) {
-                content.add(d.getName());
+    	
+    	final ProgressDialog pd = ProgressDialog.show(this, "Working..", "Listing church", true);
+
+        final Handler handler = new Handler() {
+            @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+            @Override
+            public void handleMessage(Message msg) {
+            	mAdapter.notifyDataSetChanged();
+                pd.dismiss();
             }
-        }
+        };
+        new Thread() {
+            public void run() {
+                try {
+                    churches = Helper.getChurches(region, denomination, -1l, true,BrowseChurchActivity.this);
+                    if (churches == null) {
+                        content.addAll(Arrays.asList(mcontent));
+                    } else {
+                    	for (Church d : churches) {
+                            content.add(d.getName());
+                        }
+                    }
+                    handler.sendEmptyMessage(0);
+                } catch (Exception e) {
+                    Log.e("threadmessage", e.getMessage());
+                }
+            }
+        }.start();
+    	
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, content);
         ListView actualListView = this.pullToRefreshView.getRefreshableView();
         actualListView.setAdapter(mAdapter);
@@ -178,8 +205,15 @@ public class BrowseChurchActivity extends RoboActivity {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.add_church:
+            	
+            	GPSTracker mGPS = new GPSTracker(BrowseChurchActivity.this);
+             	mGPS.fetchLocation();
+             	double lat = mGPS.getLatitude();
+             	double lon = mGPS.getLongitude();
                 CHDialog.AddChurchDialogFragment addDialog = new CHDialog.AddChurchDialogFragment();
                 addDialog.setDenomination(this.denomination);
+                addDialog.setLatitude(lat);
+                addDialog.setLongitude(lon);
                 addDialog.show(getFragmentManager(), "ADD ACTIVITY DIALOG");
             default:
                 return super.onOptionsItemSelected(item);
@@ -205,8 +239,6 @@ public class BrowseChurchActivity extends RoboActivity {
 
         @Override
         protected String[] doInBackground(Void... arg0) {
-            // TODO Auto-generated method stub
-
             SharedPreferences pref = getPreferences(MODE_MULTI_PROCESS);
             long updateTime = System.currentTimeMillis();
             long l = pref.getLong(Church.latestUpdate + "_" + denomination.getId(), -1l);

@@ -29,5 +29,6 @@
     <color name="church_worship_speaker_color">#5F826F</color>
     <color name="church_worship_attend_box_color">#8DD35F</color>
     <color name="church_worship_attend_color">#44AA00</color>
+    <color name="white_color">#FFFFFF</color>
 
 </resources>

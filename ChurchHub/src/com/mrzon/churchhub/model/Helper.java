@@ -106,12 +106,15 @@ public class Helper {
             attendances = (List<Attendance>) readSerializableObject(FILENAME, activity);
         } catch (FileNotFoundException e) {
             cache = false;
+            rewrite = true;
             e.printStackTrace();
         } catch (StreamCorruptedException e) {
             cache = false;
+            rewrite = true;
             e.printStackTrace();
         } catch (IOException e) {
             cache = false;
+            rewrite = true;
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -168,10 +171,10 @@ public class Helper {
                 cache = false;
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
-                cache = true;
+                cache = false;
                 e.printStackTrace();
             } catch (IOException e) {
-                cache = true;
+                cache = false;
                 e.printStackTrace();
             }
         }
@@ -198,8 +201,12 @@ public class Helper {
                     ParseObject pow = list.get(i).getParseObject("worshipweek");
                     atts.add(createAttendance(list.get(i), null));
                 }
-                writeSerializableObject(filename, atts, a);
-                return atts;
+                if (!rewrite) {
+                    attends.addAll(atts);
+                } else {
+                    attends = atts;
+                }
+                writeSerializableObject(filename, attends, a);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -477,6 +484,7 @@ public class Helper {
             worships = (List<Worship>) readSerializableObject(FILENAME, activity);
         } catch (FileNotFoundException e) {
             cache = false;
+            rewrite = true;
             e.printStackTrace();
         } catch (StreamCorruptedException e) {
             cache = false;

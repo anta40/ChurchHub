@@ -1,12 +1,16 @@
 package com.mrzon.churchhub;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +24,7 @@ import android.widget.Toast;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.mrzon.churchhub.model.Attendance;
 import com.mrzon.churchhub.model.Denomination;
 import com.mrzon.churchhub.model.Helper;
 
@@ -80,17 +85,36 @@ public class BrowseDenominationActivity extends RoboActivity {
     }
 
     public void setContent() {
-        this.getDenominationFromCache();
-        if (this.denominations == null) {
-            content.addAll(Arrays.asList(mcontent));
-        } else {
-            for (Denomination d : denominations) {
-                content.add(d.getName());
+    	final ProgressDialog pd = ProgressDialog.show(this, "Working..", "Get denomination list", true);
+
+        final Handler handler = new Handler() {
+            @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+            @Override
+            public void handleMessage(Message msg) {
+            	mAdapter.notifyDataSetChanged();
+                pd.dismiss();
             }
-            content.add("Unspecified");
-        }
+        };
+        new Thread() {
+            public void run() {
+                try {
+                	getDenominationFromCache();
+                    if (denominations == null) {
+                        content.addAll(Arrays.asList(mcontent));
+                    } else {
+                        for (Denomination d : denominations) {
+                            content.add(d.getName());
+                        }
+                        content.add("Unspecified");
+                    }
+                    handler.sendEmptyMessage(0);
+                } catch (Exception e) {
+                    Log.e("threadmessage", e.getMessage());
+                }
+            }
+        }.start();
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, content);
-        ListView actualListView = this.pullToRefreshView.getRefreshableView();
+        ListView actualListView = pullToRefreshView.getRefreshableView();
         actualListView.setAdapter(mAdapter);
         registerForContextMenu(actualListView);
         TextView tv = new TextView(getApplicationContext());

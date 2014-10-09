@@ -1,6 +1,7 @@
 package com.mrzon.churchhub;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -60,7 +62,7 @@ public class BrowseWorshipActivity extends RoboActivity {
     @InjectView(R.id.add_worship_button)
     private Button addWorshipButton;
 
-
+    private ProgressDialog dialog;
     private List<Worship> worships = null;
     private Church church;
     private List<Integer> weekList;
@@ -111,32 +113,72 @@ public class BrowseWorshipActivity extends RoboActivity {
                 "fonts/Roboto-Light.ttf");
     }
 
-    public void setContent() {
-        worships = Helper.getWorships(church, -1l, true, BrowseWorshipActivity.this);
-        if (this.worships == null) {
-            worships = new ArrayList<Worship>();
-        }
-        year = Util.getCurrentYear();
-        int week = Util.getCurrentWeekOfTheYear();
-        weekList = new ArrayList<Integer>();
-        worshipWeeks = new ArrayList<WorshipWeek>();
-        for (int i = 0; i < 3; i++) {
-            weekList.add(week + i);
-        }
-        mAdapter = new ListOfWorshipAdapter(getBaseContext(), this, worships);
-        wAdapter = new ListOfWeekAdapter(getBaseContext(), this, weekList);
-        lAdapter = new ListOfDateWorshipAdapter(this, this, worships, weekList, worshipWeeks);
-        ListView actualListView = this.pullToRefreshView.getRefreshableView();
-        weekOfYearList.setAdapter(wAdapter);
-        dateOfWorship.setAdapter(lAdapter);
-        actualListView.setAdapter(mAdapter);
-        TextView tv = new TextView(getApplicationContext());
-        tv.setText("No worship");
-        pullToRefreshView.setEmptyView(tv);
-        registerForContextMenu(actualListView);
-    }
+    public class SyncroniseRecords extends AsyncTask<Void, Void, Void>
+    {  
+        @Override
+        protected void onPreExecute()
+        {  
+            super.onPreExecute();
+            dialog.setMessage("Please wait...");
+            dialog.setCancelable(false);
+            dialog.show();
 
+        } 
+        @Override 
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            // Things to be done while execution of long running operation is in progress. For example updating ProgessDialog
+         }
+
+        @Override 
+        protected void onPostExecute(Void result)
+        { 
+            mAdapter = new ListOfWorshipAdapter(getBaseContext(), BrowseWorshipActivity.this, worships);
+            wAdapter = new ListOfWeekAdapter(getBaseContext(), BrowseWorshipActivity.this, weekList);
+            lAdapter = new ListOfDateWorshipAdapter(BrowseWorshipActivity.this, BrowseWorshipActivity.this, worships, weekList, worshipWeeks);
+            ListView actualListView = pullToRefreshView.getRefreshableView();
+            weekOfYearList.setAdapter(wAdapter);
+            dateOfWorship.setAdapter(lAdapter);
+            actualListView.setAdapter(mAdapter);
+            TextView tv = new TextView(getApplicationContext());
+            tv.setText("No worship");
+            pullToRefreshView.setEmptyView(tv);
+            registerForContextMenu(actualListView);
+
+               dialog.cancel();
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+        	worships = Helper.getWorships(church, -1l, false, BrowseWorshipActivity.this);
+            if (worships == null) {
+                worships = new ArrayList<Worship>();
+            }
+            year = Util.getCurrentYear();
+            int week = Util.getCurrentWeekOfTheYear();
+            weekList = new ArrayList<Integer>();
+            worshipWeeks = new ArrayList<WorshipWeek>();
+            for (int i = 0; i < 3; i++) {
+                weekList.add(week + i);
+            }
+            
+            return null;
+        }
+    } 
+    
+    public void setContent() {
+        dialog = new ProgressDialog(this);
+    	new SyncroniseRecords().execute();
+    }
+    
+    protected void onStop() {
+    	Intent intent = new Intent(Util.UPDATE_WORSHIP_EVENT);
+        // You can also include some extra data.
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    	super.onStop();
+    }
+    
     private void setAction() {
+    	
         // TODO Auto-generated method stub
         pullToRefreshView.getRefreshableView().setOnItemClickListener(new OnItemClickListener() {
 
@@ -201,7 +243,7 @@ public class BrowseWorshipActivity extends RoboActivity {
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
-                CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment();
+                CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment(BrowseWorshipActivity.this);
                 addDialog.setChurch(church);
                 addDialog.show(getFragmentManager(), "ADD WORSHIP DIALOG");
             }
@@ -222,7 +264,7 @@ public class BrowseWorshipActivity extends RoboActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
                                            int arg2, long arg3) {
-                CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment();
+                CHDialog.AddWorshipDialogFragment addDialog = new CHDialog.AddWorshipDialogFragment(BrowseWorshipActivity.this);
                 addDialog.setChurch(church);
                 addDialog.setWorship(worships.get(arg2 - 1));
                 addDialog.show(getFragmentManager(), "ADD WORSHIP DIALOG");

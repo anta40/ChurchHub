@@ -1,6 +1,7 @@
 package com.mrzon.churchhub;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -8,7 +9,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.view.Menu;
@@ -126,12 +126,6 @@ public class NearestChurchActivity extends RoboActivity {
      */    
     private Region region;
     
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            mAdapter.notifyDataSetChanged();
-        }
-    };
     
     
     /**
@@ -192,7 +186,7 @@ public class NearestChurchActivity extends RoboActivity {
             }
         });
         
-        new Timer().scheduleAtFixedRate(new GPSTracker(this), 0, 60000);
+        new Timer().scheduleAtFixedRate(new GPSTracker(this), 0, 10000);
         setStyle();
         setAction();
         setContent();
@@ -271,18 +265,27 @@ public class NearestChurchActivity extends RoboActivity {
     public void setContent() {
         //churches = Helper.getChurches(region, denomination,-1l,true,NearestChurchActivity.this);
         GPSTracker mGPS = new GPSTracker(this);
-        
+
+        mGPS.fetchLocation();
         if (mGPS.canGetLocation()) {
-            mGPS.fetchLocation();
             double mLat = mGPS.getLatitude();
             double mLong = mGPS.getLongitude();
             currentLocation = new ParseGeoPoint(mLat, mLong);
             ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Church");
             query.whereWithinKilometers("location", new ParseGeoPoint(mLat, mLong), radius);
+            final ProgressDialog pd = ProgressDialog.show(NearestChurchActivity.this, "Working..", "Fetch nearest church");
+            final Handler handler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    mAdapter.notifyDataSetChanged();
+                    pd.dismiss();
+                }
+            };
             query.findInBackground(new FindCallback<ParseObject>() {
 
                 @Override
                 public void done(List<ParseObject> arg0, ParseException arg1) {
+                	
                     churches.clear();
                     for (int i = 0; i < arg0.size(); i++) {
                         churches.add(Helper.createChurch(arg0.get(i), null));
@@ -383,6 +386,13 @@ public class NearestChurchActivity extends RoboActivity {
     }
 
     private class GetDataTask extends AsyncTask<Void, Void, String[]> {
+    	ProgressDialog pd = null;
+    	@Override
+        protected void onPreExecute() {
+    		super.onPreExecute();
+    		pd = ProgressDialog.show(NearestChurchActivity.this, "Working..", "Fetch nearest church");
+    	}
+    	
         @Override
         protected void onPostExecute(String[] result) {
             // Call onRefreshComplete when the list has been refreshed.
@@ -392,6 +402,7 @@ public class NearestChurchActivity extends RoboActivity {
 
             // Call onRefreshComplete when the list has been refreshed.
             pullToRefreshView.onRefreshComplete();
+            pd.dismiss();
             super.onPostExecute(result);
         }
 

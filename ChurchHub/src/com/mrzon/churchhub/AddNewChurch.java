@@ -6,14 +6,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
+import android.location.Address;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,6 +35,9 @@ import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.mrzon.churchhub.model.Denomination;
 import com.mrzon.churchhub.model.Helper;
+import com.mrzon.churchhub.util.GPSTracker;
+import com.parse.ParseException;
+import com.parse.ParseUser;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -50,7 +59,7 @@ import roboguice.inject.InjectView;
  * @author Emerson Chan Simbolon
  *
  */
-public class AddNewChurch extends RoboActivity implements LocationListener {
+public class AddNewChurch extends RoboActivity {
 	
 	/**
 	 * Progress dialog that shown when the church info send to the server
@@ -79,11 +88,6 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
     private double lat, lon;
     
     /**
-     * LocationManager fetch new location based on User device detection of its location
-     */
-    private LocationManager locationManager;
-    
-    /**
      * Provider of the network
      */
     private String provider;
@@ -102,6 +106,9 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
      * Content of the pulltorefreshview in arraylist representation
      */
     private ArrayList<String> content = new ArrayList<String>();
+    
+    
+    private boolean needlocation = false;
     
     /**
      * getQueryMap fetch information from URL link parameter to a Map
@@ -146,7 +153,7 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
      * @param strURL url that want to be opened
      * @return the established connection
      */
-    URLConnection connectURL(String strURL) {
+    public URLConnection connectURL(String strURL) {
         URLConnection conn = null;
         try {
             URL inputURL = new URL(strURL);
@@ -170,12 +177,9 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
                 new GetDataTask().execute();
             }
         });
-        setStyle();
-        setAction();
-        setContent();
         Intent intent = getIntent();
-        boolean needlocation = false;
-        if (intent != null) {
+        needlocation = false;
+        if (intent != null) { //handle intent
             Bundle extras = intent.getExtras();
             try {
                 String address = (String) extras.get(Intent.EXTRA_SUBJECT);
@@ -192,28 +196,10 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
         } else {
             needlocation = true;
         }
-        if (needlocation) {
-            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            // Define the criteria how to select the locatioin provider -> use
-            // default
-            Criteria criteria = new Criteria();
-            provider = locationManager.getBestProvider(criteria, false);
-            Location location = locationManager.getLastKnownLocation(provider);
-            boolean enabled = locationManager
-                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-            // Check if enabled and if not send user to the GSP settings
-            // Better solution would be to display a dialog and suggesting to
-            // go to the settings
-            if (!enabled) {
-                Intent ii = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(ii);
-            } else {
-                pd = ProgressDialog.show(this, "Working..", "Fetching location", true,
-                        false);
-            }
-        }
-
+       
+        setStyle();
+        setAction();
+        setContent();
     }
 
     public void setStyle() {
@@ -229,18 +215,47 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
     }
 
     public void setContent() {
-        this.getDenominationFromCache();
-        if (this.denominations == null) {
-            content.addAll(Arrays.asList(mcontent));
-        } else {
-            for (Denomination d : denominations) {
-                content.add(d.getName());
-            }
-        }
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, content);
-        ListView actualListView = this.pullToRefreshView.getRefreshableView();
-        actualListView.setAdapter(mAdapter);
-        registerForContextMenu(actualListView);
+    	
+    	
+    	final ProgressDialog pd = ProgressDialog.show(this, "Working..", "Fetching denomination", true);
+
+		final Handler handler = new Handler() {
+		    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+		    @Override
+		    public void handleMessage(Message msg) {
+		    	if (denominations == null) {
+		            content.addAll(Arrays.asList(mcontent));
+		        } else {
+		            for (Denomination d : denominations) {
+		                content.add(d.getName());
+		            }
+		        }
+		        mAdapter = new ArrayAdapter<String>(AddNewChurch.this, android.R.layout.simple_list_item_1, content);
+		        ListView actualListView = pullToRefreshView.getRefreshableView();
+		        actualListView.setAdapter(mAdapter);
+		        registerForContextMenu(actualListView);		    
+		        pd.dismiss();
+		    }
+		};
+		new Thread() {
+		    public void run() {
+		        try {
+		        	 if (needlocation) {
+		             	GPSTracker mGPS = new GPSTracker(AddNewChurch.this);
+		             	Looper.prepare();
+		             	mGPS.fetchLocation();
+		             	lat = mGPS.getLatitude();
+		             	lon = mGPS.getLongitude();
+		             }
+		            getDenominationFromCache();
+		        } catch (Exception e) {
+		            Log.e("threadmessage", e.getMessage());
+		        } finally {
+		        	handler.sendEmptyMessage(0);
+		        }
+		    }
+		}.start();
+
     }
 
     /**
@@ -287,7 +302,6 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
                 CHDialog.AddChurchDialogFragment addDialog = new CHDialog.AddChurchDialogFragment();
                 addDialog.setDenomination(d);
                 addDialog.setAddress(address);
-
                 addDialog.setLatitude(lat);
                 addDialog.setLongitude(lon);
                 addDialog.show(getFragmentManager(), "ADD ACTIVITY DIALOG");
@@ -329,17 +343,6 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
     @Override
     protected void onResume() {
         super.onResume();
-        boolean enabled = locationManager
-                .isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        // Check if enabled and if not send user to the GSP settings
-        // Better solution would be to display a dialog and suggesting to
-        // go to the settings
-        if (!enabled) {
-            Toast.makeText(getApplicationContext(), "GPS not active", Toast.LENGTH_SHORT).show();
-        } else {
-            locationManager.requestLocationUpdates(provider, 400, 1, this);
-        }
     }
 
     /**
@@ -348,36 +351,9 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
     @Override
     protected void onPause() {
         super.onPause();
-        locationManager.removeUpdates(this);
     }
 
-    /**
-     * Handle app when the location is changed
-     */
-    @Override
-    public void onLocationChanged(Location location) {
-        lat = (location.getLatitude());
-        lon = (location.getLongitude());
-//        Toast.makeText(getApplicationContext(), "Location fetched, your location is (" + lat + ", " + lon + ")", Toast.LENGTH_LONG).show();
-        if (pd != null)
-            pd.dismiss();
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
+ 
     /**
      * AsyncTask that handle fetch from server
      * @author Emerson Chan Simbolon
@@ -390,24 +366,23 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
 
         @Override
         protected Double[] doInBackground(String... params) {
-            URLConnection urlConn = connectURL(params[0]);
-            urlConn.getHeaderFields();
-            String url = urlConn.getURL().toExternalForm();
-            try {
-                String decode = URLDecoder.decode(url, "UTF-8");
-                url = decode;
-            } catch (UnsupportedEncodingException e1) {
-                e1.printStackTrace();
-            }
-            Map<String, String> urlQuery = getQueryMap(url);
-            Double[] locs = null;
-            try {
-                locs = getLatLong(urlQuery);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        	Geocoder geocoder = new Geocoder(AddNewChurch.this);  
+        	List<Address> addresses;
+        	try {
+				addresses = geocoder.getFromLocationName(address, 1);
 
-            return locs;
+	            Double[] locs = new Double[2];
+				if(addresses.size() > 0) {
+	        	    locs[0] = addresses.get(0).getLatitude();
+	        	    locs[1] = addresses.get(0).getLongitude();
+	        	}
+				return locs;
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        	
+            return null;
         }
 
         @Override
@@ -421,6 +396,10 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
             } else {
                 Toast.makeText(getBaseContext(), "Location is ready", Toast.LENGTH_LONG).show();
             }
+            if(pd!=null)
+            pd.dismiss();
+
+            super.onPostExecute(result);
         }
     }
 
@@ -434,6 +413,8 @@ public class AddNewChurch extends RoboActivity implements LocationListener {
 
             // Call onRefreshComplete when the list has been refreshed.
             pullToRefreshView.onRefreshComplete();
+            if(pd!=null)
+            pd.dismiss();
             super.onPostExecute(result);
         }
 

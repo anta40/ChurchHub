@@ -142,6 +142,7 @@ public class BrowseCountryActivity extends RoboActivity {
      * set content to the layout
      */
     public void setContent() {
+    	
         getCountryFromCache();
         if (this.countries == null) {
             content.addAll(Arrays.asList(mcontent));

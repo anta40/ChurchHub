@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">ChurchHub</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
@@ -18,7 +17,7 @@
     <string name="next_worship">Next Worship</string>
     <string name="attend">Attend</string>
     <string name="worship_speaker">Pdt. Hariandja</string>
-    <string name="title_activity_church">ChurchActivity</string>
+    <string name="title_activity_church">Church Info</string>
     <string name="denomination_message_dialog">Choose denomination</string>
     <string name="add_denomination_message_dialog">Fill the denomination information</string>
     <string name="add_denomination_message_p">Submit</string>
@@ -50,7 +49,7 @@
 
     <string name="title_activity_browse_denomination">Denomination</string>
     <string name="add_denomination">Add denomination</string>
-    <string name="title_activity_browse_church">BrowseChurchActivity</string>
+    <string name="title_activity_browse_church">List of church</string>
 
     <string-array name="days">
         <item>Monday</item>
@@ -62,11 +61,11 @@
         <item>Sunday</item>
     </string-array>
 
-    <string name="title_activity_browse_country">BrowseCountryActivity</string>
-    <string name="title_activity_nearest_church">NearestChurchActivity</string>
+    <string name="title_activity_browse_country">List of country</string>
+    <string name="title_activity_nearest_church">Nearest church</string>
     <string name="title_activity_add_new_church">Add New Church</string>
-    <string name="title_activity_browse_worship">BrowseWorshipActivity</string>
-    <string name="title_activity_recent_attending">RecentAttendingActivity</string>
+    <string name="title_activity_browse_worship">List of worship</string>
+    <string name="title_activity_recent_attending">Recent attending</string>
     <string name="speaker">Speaker</string>
     <string name="theme">Theme</string>
     <string name="nats">Nats</string>

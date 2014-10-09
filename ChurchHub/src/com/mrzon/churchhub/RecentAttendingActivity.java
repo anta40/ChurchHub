@@ -1,11 +1,15 @@
 package com.mrzon.churchhub;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.NavUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +25,10 @@ import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.mrzon.churchhub.model.Attendance;
 import com.mrzon.churchhub.model.Helper;
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseUser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,14 +108,35 @@ public class RecentAttendingActivity extends RoboActivity {
      * Set content to the activity
      */
     public void setContent() {
-        this.getAttendanceFromCache();
-        if (this.attendances == null) {
-            content.addAll(Arrays.asList(mcontent));
-        } else {
-            for (Attendance d : attendances) {
-                content.add(d.getChurch().getName());
+    	
+    	final ProgressDialog pd = ProgressDialog.show(this, "Working..", "Fetch recent attended church");
+        final Handler handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                mAdapter.notifyDataSetChanged();
+                pd.dismiss();
             }
-        }
+        };
+        new Thread() {
+		    public void run() {
+		        try {
+		        	getAttendanceFromCache();
+		            if (attendances == null) {
+		                content.addAll(Arrays.asList(mcontent));
+		            } else {
+		                for (Attendance d : attendances) {
+		                    content.add(d.getChurch().getName());
+		                }
+		            }
+		        } catch (Exception e) {
+		            Log.e("threadmessage", e.getMessage());
+		        } finally {
+		        	handler.sendEmptyMessage(0);
+		        }
+		    }
+		}.start();
+    	
+        
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, content);
         ListView actualListView = this.pullToRefreshView.getRefreshableView();
         actualListView.setAdapter(mAdapter);

@@ -51,8 +51,8 @@ public class MainActivity extends RoboActivity {
     /**
      * TODO: Button to handle the stats activity
      */
-    @InjectView(R.id.main_stats_button)
-    private Button stats;
+//    @InjectView(R.id.main_stats_button)
+//    private Button stats;
     
     /**
      * Button to handle Recent Attending Activity
@@ -119,7 +119,7 @@ public class MainActivity extends RoboActivity {
                 "fonts/Roboto-Light.ttf");
         nearest.setTypeface(roboto_l);
         browse.setTypeface(roboto_l);
-        stats.setTypeface(roboto_l);
+//        stats.setTypeface(roboto_l);
         recent.setTypeface(roboto_l);
     }
 
@@ -145,17 +145,17 @@ public class MainActivity extends RoboActivity {
         signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CHDialog.SignUpDialogFragment loginDialog = new CHDialog.SignUpDialogFragment();
+                CHDialog.SignUpDialogFragment loginDialog = new CHDialog.SignUpDialogFragment(MainActivity.this);
                 loginDialog.show(getFragmentManager(), "SHOW SIGNUP DIALOG");
             }
 
         });
-        stats.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-            }
-        });
+//        stats.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                // TODO Auto-generated method stub
+//            }
+//        });
         recent.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -170,7 +170,7 @@ public class MainActivity extends RoboActivity {
             @Override
             public void onClick(View v) {
                 if (ParseUser.getCurrentUser() == null) {
-                    CHDialog.LoginDialogFragment loginDialog = new CHDialog.LoginDialogFragment();
+                    CHDialog.LoginDialogFragment loginDialog = new CHDialog.LoginDialogFragment(MainActivity.this);
                     loginDialog.setView(login);
                     loginDialog.show(getFragmentManager(), "SHOW LOGIN DIALOG");
                 } else {
@@ -218,6 +218,7 @@ public class MainActivity extends RoboActivity {
         }
         setStyle();
         setAction();
+
         LocalBroadcastManager.getInstance(this).registerReceiver(loginReceiver,
                 new IntentFilter(Util.LOGIN_EVENT));
         LocalBroadcastManager.getInstance(this).registerReceiver(logoutReceiver,

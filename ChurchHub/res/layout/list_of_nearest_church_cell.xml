@@ -1,22 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white_color"
+    android:orientation="vertical" >
 
-    <TextView android:id="@+id/nearby_church_name" android:layout_width="138dp"
-        android:layout_height="wrap_content" android:text="GKMI Bukit Hermon" />
+    <TextView
+        android:id="@+id/nearby_church_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="GKMI Bukit Hermon"
+        android:textColor="@color/church_title_box_color"
+        android:textSize="@dimen/normal_font_size" />
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
 
-        <TextView android:id="@+id/nearby_church_address" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:layout_weight="0.62"
+        <TextView
+            android:id="@+id/nearby_church_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.62"
             android:text="Jalan kampung ijo no 5c"
             android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/church_worship_speaker_color"
             android:textSize="@dimen/subtitle_list_size" />
 
-        <TextView android:id="@+id/nearby_church_distance" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:drawableLeft="@drawable/arrow_loc"
-            android:text="2km" android:textSize="10dp" />
+        <TextView
+            android:id="@+id/nearby_church_distance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/arrow_loc"
+            android:text="2km"
+            android:textColor="@color/church_worship_box_color"
+            android:textSize="10dp" />
+
     </LinearLayout>
 
 </LinearLayout>

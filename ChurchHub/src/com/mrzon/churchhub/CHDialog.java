@@ -1,15 +1,21 @@
 package com.mrzon.churchhub;
 
+import java.util.Arrays;
+
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,6 +28,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mrzon.churchhub.model.Attendance;
 import com.mrzon.churchhub.model.Church;
 import com.mrzon.churchhub.model.Country;
 import com.mrzon.churchhub.model.Denomination;
@@ -48,6 +55,7 @@ import com.parse.ParseUser;
          * The church that want to added
          */
     	private Church church;
+    	private BrowseWorshipActivity mActivity;
     	
     	/**
          * The worship that want to be edited
@@ -59,7 +67,12 @@ import com.parse.ParseUser;
          */
         private int day = 0;
 
-        @Override
+        public AddWorshipDialogFragment(
+				BrowseWorshipActivity browseWorshipActivity) {
+			mActivity = browseWorshipActivity;
+		}
+
+		@Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -81,6 +94,8 @@ import com.parse.ParseUser;
                 stime.setText(w.getStartString());
                 etime.setText(w.getEndString());
                 s.setSelection(w.getDay());
+            } else {
+            	w = new Worship();
             }
             s.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -98,23 +113,36 @@ import com.parse.ParseUser;
                             String name = cname.getText().toString();
                             String start = stime.getText().toString();
                             String end = etime.getText().toString();
-                            try {
-                                Worship c = new Worship();
-                                c.setName(name);
-                                c.setChurch(church);
-                                if (start.split(":").length > 0) {
-                                    c.setStart(Double.parseDouble(start.split(":")[0]) + Double.parseDouble(start.split(":")[1]) / 60);
-                                }
-                                if (end.split(":").length > 0) {
-                                    c.setEnd(Double.parseDouble(end.split(":")[0]) + Double.parseDouble(end.split(":")[1]) / 60);
-                                }
-                                c.setDay(day);
-                                //TODO implement establishment date c.setEsDate(new Date(date));
-                                c.submit();
-                            } catch (ParseException e) {
-                                Toast.makeText(getActivity().getBaseContext(), "Add church failed", Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
-                            }
+                            w.setName(name);
+							w.setChurch(church);
+							if (start.split(":").length > 0) {
+							    w.setStart(Double.parseDouble(start.split(":")[0]) + Double.parseDouble(start.split(":")[1]) / 60);
+							}
+							if (end.split(":").length > 0) {
+							    w.setEnd(Double.parseDouble(end.split(":")[0]) + Double.parseDouble(end.split(":")[1]) / 60);
+							}
+							w.setDay(day);
+							//TODO implement establishment date c.setEsDate(new Date(date));
+							final ProgressDialog pd = ProgressDialog.show(getActivity(),"Working..","Update worship list");
+							final Handler handler = new Handler() {
+							    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+							    @Override
+							    public void handleMessage(Message msg) {
+							        pd.dismiss();
+							        if(mActivity!=null)
+						            mActivity.setContent();
+							    }
+							};
+							new Thread() {
+							    public void run() {
+							        try {
+							            w.submit();
+							        	handler.sendEmptyMessage(0);
+							        } catch (Exception e) {
+							            Log.e("threadmessage", e.getMessage());
+							        }
+							    }
+							}.start();
                         }
                     })
                     .setNegativeButton(R.string.add_denomination_message_n, new DialogInterface.OnClickListener() {
@@ -174,15 +202,28 @@ import com.parse.ParseUser;
                             String speaker = espeaker.getText().toString();
                             String theme = etheme.getText().toString();
                             String nats = enats.getText().toString();
-                            try {
-                                worshipWeek.setSpeaker(speaker);
-                                worshipWeek.setTheme(theme);
-                                worshipWeek.setNats(nats);
-                                worshipWeek.submit();
-                            } catch (ParseException e) {
-                                Toast.makeText(getActivity().getBaseContext(), "Add church failed", Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
-                            }
+                            worshipWeek.setSpeaker(speaker);
+                            worshipWeek.setTheme(theme);
+                            worshipWeek.setNats(nats);
+                           
+                            final ProgressDialog pd = ProgressDialog.show(getActivity(),"Working..","Adding worship week info");
+							final Handler handler = new Handler() {
+							    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+							    @Override
+							    public void handleMessage(Message msg) {
+							        pd.dismiss();
+							    }
+							};
+							new Thread() {
+							    public void run() {
+							        try {
+							        	 worshipWeek.submit();
+							        	handler.sendEmptyMessage(0);
+							        } catch (Exception e) {
+							            Log.e("threadmessage", e.getMessage());
+							        }
+							    }
+							}.start();
                         }
                     })
                     .setNegativeButton(R.string.add_denomination_message_n, new DialogInterface.OnClickListener() {
@@ -250,7 +291,11 @@ import com.parse.ParseUser;
 	 * @author Emerson Chan Simbolon
 	 */
     public static class LoginDialogFragment extends DialogFragment {
+        private Activity mActivity;
         
+        public LoginDialogFragment(Activity a) {
+        	mActivity = a;
+        }
     	/**
     	 * Button to conduct login
     	 */
@@ -275,16 +320,30 @@ import com.parse.ParseUser;
             builder.setMessage(R.string.login_message_dialog)
                     .setPositiveButton(R.string.login_message_p, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            String name = username.getText().toString();
-                            String pass = password.getText().toString();
-                            try {
-                                ParseUser.logIn(name, pass);
-                                login.setText("Logout");
-                                sendMessage();
-                            } catch (ParseException e) {
-                                Toast.makeText(getActivity().getBaseContext(), "Login failed", Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
-                            }
+                            final String name = username.getText().toString();
+                            final String pass = password.getText().toString();
+                            final ProgressDialog pd = ProgressDialog.show(mActivity, "Working..", "Logging in", true);
+
+							final Handler handler = new Handler() {
+							    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+							    @Override
+							    public void handleMessage(Message msg) {
+							        login.setText("Logout");
+							        LoginDialogFragment.this.sendMessage();
+							        pd.dismiss();
+							    }
+							};
+							new Thread() {
+							    public void run() {
+							        try {
+							        	ParseUser.logIn(name, pass);
+							            handler.sendEmptyMessage(0);
+							        } catch (Exception e) {
+							            Log.e("threadmessage", e.getMessage());
+							        }
+							    }
+							}.start();
+							
                         }
                     })
                     .setNegativeButton(R.string.login_message_n, new DialogInterface.OnClickListener() {
@@ -306,7 +365,6 @@ import com.parse.ParseUser;
             Log.d("sender", "Broadcasting message");
             Intent intent = new Intent(Util.LOGIN_EVENT);
             // You can also include some extra data.
-            intent.putExtra("message", "This is my message!");
             LocalBroadcastManager.getInstance(this.getActivity()).sendBroadcast(intent);
         }
     }
@@ -318,6 +376,13 @@ import com.parse.ParseUser;
 	 * @author Emerson Chan Simbolon
 	 */
     public static class SignUpDialogFragment extends DialogFragment {
+    	private boolean error = false;
+        
+        private Activity mActivity;
+        
+        public SignUpDialogFragment(Activity a) {
+        	mActivity = a;
+        }    	
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the Builder class for convenient dialog construction
@@ -334,30 +399,52 @@ import com.parse.ParseUser;
             final EditText email = (EditText) v.findViewById(R.id.email);
 
             final EditText username = (EditText) v.findViewById(R.id.username);
-
+            
             final EditText password = (EditText) v.findViewById(R.id.password);
             builder.setMessage(R.string.signup_message_dialog)
                     .setPositiveButton(R.string.signup, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            String em = email.getText().toString();
-                            String name = username.getText().toString();
-                            String pass = password.getText().toString();
-                            ParseUser parseUser = new ParseUser();
-                            parseUser.setEmail(em);
-                            parseUser.setUsername(name);
-                            parseUser.setPassword(pass);
-                            boolean error = false;
-                            //					final ProgressDialog pf = ProgressDialog.show(getActivity().getBaseContext(), "Working..", "Setting up your account");
-                            try {
-                                parseUser.signUp();
-                            } catch (ParseException e) {
-                                error = true;
-                                Toast.makeText(getActivity().getApplicationContext(), "Signup failed", Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
-                            }
-                            if (!error) {
-                                Toast.makeText(getActivity().getApplicationContext(), "Registration success, please login to continue", Toast.LENGTH_SHORT).show();
-                            }
+                            
+                            final ProgressDialog pd = ProgressDialog.show(mActivity, "Working..", "Signing up", true);
+
+							final Handler handler = new Handler() {
+							    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+							    @Override
+							    public void handleMessage(Message msg) {
+							    	if (!error) {
+							    		Intent intent = new Intent(Util.LOGIN_EVENT);
+							            // You can also include some extra data.
+							            LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
+		                                Toast.makeText(mActivity, "Registration success, you are automatically logged in", Toast.LENGTH_SHORT).show();
+		                            } else {
+		                            	Toast.makeText(mActivity, "Signup failed, no network connection", Toast.LENGTH_SHORT).show();
+		                            }
+							        pd.dismiss();
+							    }
+							};
+							new Thread() {
+							    public void run() {
+							        try {
+							        	String em = email.getText().toString();
+			                            String name = username.getText().toString();
+			                            String pass = password.getText().toString();
+			                            ParseUser parseUser = new ParseUser();
+			                            parseUser.setEmail(em);
+			                            parseUser.setUsername(name);
+			                            parseUser.setPassword(pass);
+		                                parseUser.signUp();
+							        } catch (ParseException e) {
+		                                error = true;
+		                                e.printStackTrace();
+		                            } catch (Exception e) {
+							            Log.e("threadmessage", e.getMessage());
+							        } finally {
+							        	handler.sendEmptyMessage(0);
+							        }
+							    }
+							}.start();
+                            
+                            
                         }
                     })
                     .setNegativeButton(R.string.login_message_n, new DialogInterface.OnClickListener() {
@@ -392,7 +479,6 @@ import com.parse.ParseUser;
                                     Intent intent2 = new Intent(getActivity(), BrowseCountryActivity.class);
                                     startActivity(intent2);
                                     break;
-
                             }
                         }
                     });
@@ -486,27 +572,38 @@ import com.parse.ParseUser;
                             String add = caddress.getText().toString();
                             String we = cwebsite.getText().toString();
                             String loc = clocation.getText().toString();
-                            //					String date = cesdate.getText().toString();
-                            //TODO Add some date picker
-                            try {
-                                Church c = new Church();
-                                c.setName(name);
-                                c.setAddress(add);
-                                if (loc.split(",").length > 0) {
-                                    c.setLat(Double.parseDouble(loc.split(",")[0]));
-                                    c.setLon(Double.parseDouble(loc.split(",")[1]));
-                                }
-                                //c.setEsDate(new Date(date));
-                                c.setWebsite(we);
-                                c.setDenomination(denomination);
-                                c.submit();
-                                if (getActivity() instanceof AddNewChurch) {
-                                    getActivity().finish();
-                                }
-                            } catch (ParseException e) {
-                                Toast.makeText(getActivity().getBaseContext(), "Add church failed", Toast.LENGTH_SHORT).show();
-                                e.printStackTrace();
-                            }
+                            final Church c = new Church();
+							c.setName(name);
+							c.setAddress(add);
+							if (loc.split(",").length > 0) {
+							    c.setLat(Double.parseDouble(loc.split(",")[0]));
+							    c.setLon(Double.parseDouble(loc.split(",")[1]));
+							}
+							//c.setEsDate(new Date(date));
+							c.setWebsite(we);
+							c.setDenomination(denomination);
+							final ProgressDialog pd = ProgressDialog.show(getActivity(),"Working..","Adding church");
+							final Handler handler = new Handler() {
+							    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+							    @Override
+							    public void handleMessage(Message msg) {
+							        pd.dismiss();
+							    }
+							};
+							new Thread() {
+							    public void run() {
+							        try {
+							            c.submit();
+							        	handler.sendEmptyMessage(0);
+							        } catch (Exception e) {
+							            Log.e("threadmessage", e.getMessage());
+							        }
+							    }
+							}.start();
+							
+							if (getActivity() instanceof AddNewChurch) {
+							    getActivity().finish();
+							}
                         }
                     })
                     .setNegativeButton(R.string.add_denomination_message_n, new DialogInterface.OnClickListener() {
